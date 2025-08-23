@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Pong Reservations Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input[type="date"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        input[type="date"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+        
+        .date-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .date-btn {
+            flex: 1;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #34495e;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 100px;
+        }
+        
+        .date-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .date-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .toggle-label {
+            color: #34495e;
+            font-weight: 500;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e0e6ed;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #667eea;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #667eea;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            padding: 10px;
+            background: #ffe6e6;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏓 Ping Pong Report Generator</h1>
+        <p class="subtitle">Generate reservation reports from Google Calendar</p>
+        
+        <form id="reportForm">
+            <div class="date-buttons">
+                <button type="button" class="date-btn" onclick="setToday()">Today</button>
+                <button type="button" class="date-btn" onclick="setThisWeek()">This Week</button>
+                <button type="button" class="date-btn" onclick="setThisMonth()">This Month</button>
+                <button type="button" class="date-btn" onclick="setLastWeek()">Last Week</button>
+                <button type="button" class="date-btn" onclick="setNextWeek()">Next Week</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="startDate">Start Date *</label>
+                <input type="date" id="startDate" name="Start Date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="endDate">End Date *</label>
+                <input type="date" id="endDate" name="End Date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="calendarId">Calendar ID (leave blank for primary)</label>
+                <input type="text" id="calendarId" name="Calendar ID (leave blank for primary)" 
+                       placeholder="primary">
+            </div>
+            
+            <div class="form-group">
+                <div class="toggle-group">
+                    <label class="toggle-label">Check Gmail for Updates</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="checkGmail" name="Check Gmail for Updates">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn">Generate Report</button>
+            
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Generating your report...</p>
+            </div>
+            
+            <div class="error" id="errorMsg"></div>
+        </form>
+    </div>
+    
+    <script>
+        // IMPORTANT: Replace this with your actual n8n webhook URL
+        // Get this URL from your n8n Form Trigger node (click on the node and copy the Production URL)
+        // It should look like one of these formats:
+        // - https://your-n8n-instance.com/form/ping-pong-report
+        // - https://n8n.yourdomain.com/webhook/ping-pong-report
+        // - https://app.n8n.cloud/form/[some-id]
+        
+        const WEBHOOK_URL = 'https://private-agent.app.n8n.cloud/form/ping-pong-report';
+        
+        // Get NYC timezone offset
+        function getNYCDate() {
+            return new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"}));
+        }
+        
+        // Format date for input fields
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Get Monday of current week
+        function getMonday(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+        
+        // Get Sunday of current week
+        function getSunday(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? 0 : 7);
+            return new Date(d.setDate(diff));
+        }
+        
+        // Date selection functions
+        function setToday() {
+            const today = getNYCDate();
+            document.getElementById('startDate').value = formatDate(today);
+            document.getElementById('endDate').value = formatDate(today);
+            highlightActiveButton('Today');
+        }
+        
+        function setThisWeek() {
+            const today = getNYCDate();
+            const monday = getMonday(today);
+            const sunday = getSunday(today);
+            document.getElementById('startDate').value = formatDate(monday);
+            document.getElementById('endDate').value = formatDate(sunday);
+            highlightActiveButton('This Week');
+        }
+        
+        function setThisMonth() {
+            const today = getNYCDate();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            document.getElementById('startDate').value = formatDate(firstDay);
+            document.getElementById('endDate').value = formatDate(lastDay);
+            highlightActiveButton('This Month');
+        }
+        
+        function setLastWeek() {
+            const today = getNYCDate();
+            const lastWeek = new Date(today.setDate(today.getDate() - 7));
+            const monday = getMonday(lastWeek);
+            const sunday = getSunday(lastWeek);
+            document.getElementById('startDate').value = formatDate(monday);
+            document.getElementById('endDate').value = formatDate(sunday);
+            highlightActiveButton('Last Week');
+        }
+        
+        function setNextWeek() {
+            const today = getNYCDate();
+            const nextWeek = new Date(today.setDate(today.getDate() + 7));
+            const monday = getMonday(nextWeek);
+            const sunday = getSunday(nextWeek);
+            document.getElementById('startDate').value = formatDate(monday);
+            document.getElementById('endDate').value = formatDate(sunday);
+            highlightActiveButton('Next Week');
+        }
+        
+        function highlightActiveButton(buttonText) {
+            document.querySelectorAll('.date-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === buttonText) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+        
+        // Form submission
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                'Start Date': document.getElementById('startDate').value,
+                'End Date': document.getElementById('endDate').value,
+                'Calendar ID (leave blank for primary)': document.getElementById('calendarId').value || '',
+                'Check Gmail for Updates': document.getElementById('checkGmail').checked
+            };
+            
+            // Show loading
+            document.querySelector('.loading').classList.add('show');
+            document.querySelector('.submit-btn').disabled = true;
+            document.getElementById('errorMsg').classList.remove('show');
+            
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('text/html')) {
+                        const html = await response.text();
+                        // Open report in new window
+                        const newWindow = window.open('', '_blank');
+                        newWindow.document.write(html);
+                        newWindow.document.close();
+                    } else {
+                        const result = await response.json();
+                        console.log('Report generated:', result);
+                        alert('Report generated successfully!');
+                    }
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('errorMsg').textContent = 
+                    'Error generating report. Please check your webhook URL and try again.';
+                document.getElementById('errorMsg').classList.add('show');
+            } finally {
+                document.querySelector('.loading').classList.remove('show');
+                document.querySelector('.submit-btn').disabled = false;
+            }
+        });
+        
+        // Set default to today on load
+        window.addEventListener('load', () => {
+            setToday();
+        });
+    </script>
+</body>
+</html>
