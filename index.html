@@ -1,441 +1,852 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ping Pong Reservations Report</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 28px;
-            text-align: center;
-        }
-        
-        .subtitle {
-            color: #7f8c8d;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #34495e;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        input[type="date"],
-        input[type="text"] {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e6ed;
-            border-radius: 10px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-        
-        input[type="date"]:focus,
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
-        
-        .date-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .date-btn {
-            flex: 1;
-            padding: 10px 15px;
-            background: #f8f9fa;
-            border: 2px solid #e0e6ed;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            color: #34495e;
-            transition: all 0.3s ease;
-            text-align: center;
-            min-width: 100px;
-        }
-        
-        .date-btn:hover {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-        
-        .date-btn.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-        
-        .toggle-group {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-        
-        .toggle-label {
-            color: #34495e;
-            font-weight: 500;
-            font-size: 14px;
-            margin: 0;
-        }
-        
-        .toggle-switch {
-            position: relative;
-            width: 50px;
-            height: 26px;
-        }
-        
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #e0e6ed;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        
-        input:checked + .toggle-slider {
-            background-color: #667eea;
-        }
-        
-        input:checked + .toggle-slider:before {
-            transform: translateX(24px);
-        }
-        
-        .submit-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-        }
-        
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-        
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-            color: #667eea;
-        }
-        
-        .loading.show {
-            display: block;
-        }
-        
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .error {
-            color: #e74c3c;
-            margin-top: 10px;
-            padding: 10px;
-            background: #ffe6e6;
-            border-radius: 8px;
-            display: none;
-        }
-        
-        .error.show {
-            display: block;
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Space Ops — Visual Preview</title>
+<style>
+  :root{
+    --bg:#0b0f14;
+    --bg-2:#0d1219;
+    --surface:#121826;
+    --elev:#0f1522;
+    --text:#e6f1ff;
+    --muted:#9bb0c9;
+    --primary:#00e5ff;
+    --primary-2:#8a2be2;
+    --ok:#34d399;
+    --warn:#f59e0b;
+    --bad:#ef4444;
+    --glow:0 0 24px rgba(0,229,255,.35), 0 0 8px rgba(138,43,226,.25);
+    --radius:14px;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font:14px/1.5 ui-sans-serif, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, system-ui;
+    color:var(--text);
+    background:
+      radial-gradient(1200px 800px at 10% -20%, rgba(0,229,255,.08), transparent 60%),
+      radial-gradient(1000px 700px at 120% 10%, rgba(138,43,226,.08), transparent 50%),
+      linear-gradient(180deg, var(--bg), var(--bg-2));
+  }
+  a{color:inherit;text-decoration:none}
+  .app{
+    display:grid;
+    grid-template-columns: 260px 1fr;
+    min-height:100dvh;
+  }
+  /* Sidebar */
+  .sidebar{
+    position:sticky; top:0; align-self:start;
+    height:100dvh;
+    background:linear-gradient(180deg, rgba(18,24,38,.9), rgba(18,24,38,.6));
+    border-right:1px solid rgba(255,255,255,.06);
+    padding:18px 16px;
+    backdrop-filter: blur(10px);
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;padding:10px 8px;margin-bottom:10px;
+  }
+  .logo{
+    width:36px;height:36px;border-radius:10px;
+    background:
+      radial-gradient(120% 120% at 30% 20%, rgba(0,229,255,.6), transparent 60%),
+      radial-gradient(120% 120% at 70% 80%, rgba(138,43,226,.55), transparent 60%),
+      #0b0f14;
+    box-shadow: var(--glow);
+    position:relative;
+  }
+  .logo:after{
+    content:""; position:absolute; inset:6px; border-radius:8px;
+    background:conic-gradient(from 180deg, rgba(255,255,255,.1), rgba(255,255,255,0) 40%, rgba(255,255,255,.1) 70%);
+  }
+  .brand h1{font-size:15px;letter-spacing:.2em;margin:0;text-transform:uppercase;color:#c9e7ff;}
+  .nav{
+    margin-top:8px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .nav button{
+    appearance:none;border:0;background:transparent;color:var(--text);
+    text-align:left;padding:12px 12px;border-radius:12px;display:flex;align-items:center;gap:10px;
+    transition:.18s ease; cursor:pointer;
+  }
+  .nav button:hover{background:#182236}
+  .nav button.active{background:linear-gradient(90deg, rgba(0,229,255,.15), rgba(138,43,226,.08)); box-shadow: var(--glow)}
+  .nav .tag{margin-left:auto;font-size:12px;opacity:.8;padding:2px 8px;border-radius:999px;background:#182236}
+  .sidebar .mini{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 2px;
+  }
+  .chip{
+    padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#0e1524;cursor:pointer;text-align:center;
+  }
+  .chip:hover{border-color:rgba(0,229,255,.5); box-shadow:var(--glow)}
+  .foot{
+    position:absolute; bottom:14px; left:16px; right:16px; opacity:.9; font-size:12px;
+    border-top:1px solid rgba(255,255,255,.08); padding-top:10px;
+  }
+  /* Main */
+  .main{
+    min-width:0; display:flex; flex-direction:column;
+  }
+  .topbar{
+    position:sticky; top:0; z-index:5;
+    display:flex; align-items:center; gap:12px;
+    padding:12px 16px; border-bottom:1px solid rgba(255,255,255,.06);
+    background:linear-gradient(180deg, rgba(11,15,20,.8), rgba(11,15,20,.45));
+    backdrop-filter: blur(6px);
+  }
+  .search{
+    flex:1; display:flex; align-items:center; gap:10px;
+    background:#0e1524; border:1px solid rgba(255,255,255,.08); border-radius:999px; padding:8px 12px;
+  }
+  .search input{
+    border:0;background:transparent; color:var(--text); outline:none; width:100%;
+  }
+  .btn{
+    appearance:none; border:1px solid rgba(255,255,255,.1); background:#101826; color:var(--text);
+    padding:10px 14px; border-radius:12px; cursor:pointer; transition:.18s ease; display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn:hover{border-color:rgba(0,229,255,.6); box-shadow:var(--glow)}
+  .btn.primary{background:linear-gradient(90deg, rgba(0,229,255,.15), rgba(138,43,226,.15)); border-color:rgba(0,229,255,.35)}
+  .btn.ghost{background:transparent}
+  .avatar{width:28px;height:28px;border-radius:999px;background:radial-gradient(circle at 30% 30%, #64e1ff, #7e3ff2);}
+  .views{padding:18px; display:grid; gap:18px;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .grid{
+    display:grid; gap:16px;
+  }
+  .kpis{grid-template-columns: repeat(4, minmax(0,1fr));}
+  .card{
+    background:linear-gradient(180deg, rgba(16,24,38,.9), rgba(16,24,38,.7));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px; min-height:72px;
+  }
+  .card h3{margin:0 0 8px 0; font-weight:600; font-size:14px; color:#cde6ff}
+  .big{font-size:28px; font-weight:700; letter-spacing:.5px}
+  .muted{color:var(--muted)}
+  .row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .split{display:grid; grid-template-columns: 1.2fr .8fr; gap:16px;}
+  .floor{
+    display:grid; gap:12px; grid-template-columns: repeat(4, minmax(0,1fr));
+  }
+  .tile{
+    padding:14px; border-radius:14px; background:#0f1525; border:1px solid rgba(255,255,255,.06);
+    display:grid; gap:8px; cursor:pointer; transition:.18s ease;
+  }
+  .tile:hover{border-color:rgba(0,229,255,.5); box-shadow:var(--glow)}
+  .status{font-size:12px; padding:4px 8px; border-radius:999px; width:max-content}
+  .s-ok{background:rgba(52,211,153,.15); color:#a7f3d0}
+  .s-busy{background:rgba(245,158,11,.15); color:#fde68a}
+  .s-off{background:rgba(239,68,68,.15); color:#fecaca}
+  .list{display:grid; gap:8px}
+  .item{
+    padding:12px; border-radius:12px; background:#0f1525; border:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; gap:12px; justify-content:space-between;
+  }
+  .tabs{display:flex; gap:8px; flex-wrap:wrap}
+  .tab{padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.08); background:#0e1524; cursor:pointer}
+  .tab.active{border-color:rgba(0,229,255,.6); box-shadow:var(--glow)}
+  .table{
+    width:100%; border-collapse:separate; border-spacing:0 8px;
+  }
+  .table th{font-size:12px; color:#b9d7ff; text-align:left; padding:8px 10px}
+  .table td{
+    background:#0f1525; border:1px solid rgba(255,255,255,.06);
+    padding:10px; border-left-width:1px; border-right-width:1px;
+  }
+  .table tr td:first-child{border-top-left-radius:10px; border-bottom-left-radius:10px}
+  .table tr td:last-child{border-top-right-radius:10px; border-bottom-right-radius:10px}
+  /* Drawer & Modal & Toasts */
+  .drawer{
+    position:fixed; top:0; right:-420px; width:420px; height:100dvh;
+    background:linear-gradient(180deg, rgba(16,24,38,.98), rgba(16,24,38,.92));
+    border-left:1px solid rgba(255,255,255,.08); box-shadow: var(--shadow);
+    transition:.3s ease; z-index:20; padding:16px;
+  }
+  .drawer.open{right:0}
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(5,9,14,.6); backdrop-filter: blur(2px);
+    display:none; align-items:center; justify-content:center; z-index:30;
+  }
+  .modal-bg.show{display:flex}
+  .modal{
+    width:min(680px, 92vw); background:#0f1525; border:1px solid rgba(255,255,255,.08);
+    border-radius:16px; padding:18px; box-shadow: var(--shadow);
+  }
+  .modal .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
+  .field{display:grid; gap:6px; margin:8px 0}
+  .field input,.field select,.field textarea{
+    background:#0b1220; color:var(--text); border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:10px; outline:none;
+  }
+  .toast-wrap{position:fixed; bottom:16px; right:16px; display:grid; gap:8px; z-index:40}
+  .toast{background:#0f1525; border:1px solid rgba(255,255,255,.08); padding:12px 14px; border-radius:12px; min-width:260px; box-shadow:var(--shadow)}
+  .kbd{padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,.2); background:#0d1422; font-size:12px}
+  /* Command palette */
+  .palette{position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; padding-top:10vh; z-index:50; background:rgba(0,0,0,.35); backdrop-filter: blur(2px)}
+  .palette.show{display:flex}
+  .palette .box{width:min(720px, 92vw); background:#0f1525; border:1px solid rgba(255,255,255,.12); border-radius:14px; overflow:hidden; box-shadow:var(--shadow)}
+  .palette .box header{padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; align-items:center; gap:10px}
+  .palette .box input{width:100%; background:transparent; border:0; color:var(--text); outline:none; font-size:16px}
+  .palette .list{max-height:46vh; overflow:auto}
+  .palette .list button{width:100%; text-align:left; padding:12px; background:transparent; border:0; color:var(--text); cursor:pointer}
+  .palette .list button:hover{background:#141c2f}
+  /* Responsive */
+  @media (max-width: 960px){
+    .app{grid-template-columns: 72px 1fr;}
+    .brand h1{display:none}
+    .nav .label{display:none}
+    .split{grid-template-columns: 1fr}
+    .floor{grid-template-columns: repeat(2, minmax(0,1fr))}
+  }
+  @media (max-width: 560px){
+    .kpis{grid-template-columns: repeat(2, minmax(0,1fr))}
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🏓 Ping Pong Reservations</h1>
-        <p class="subtitle">Generate reservation reports from Google Calendar</p>
-        
-        <form id="reportForm">
-            <div class="date-buttons">
-                <button type="button" class="date-btn" onclick="setToday()">Today</button>
-                <button type="button" class="date-btn" onclick="setThisWeek()">This Week</button>
-                <button type="button" class="date-btn" onclick="setThisMonth()">This Month</button>
-                <button type="button" class="date-btn" onclick="setLastWeek()">Last Week</button>
-                <button type="button" class="date-btn" onclick="setNextWeek()">Next Week</button>
-            </div>
-            
-            <div class="form-group">
-                <label for="startDate">Start Date *</label>
-                <input type="date" id="startDate" name="Start Date" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="endDate">End Date *</label>
-                <input type="date" id="endDate" name="End Date" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="calendarId">Calendar ID (leave blank for primary)</label>
-                <input type="text" id="calendarId" name="Calendar ID (leave blank for primary)" 
-                       placeholder="primary">
-            </div>
-            
-            <div class="form-group">
-                <div class="toggle-group">
-                    <label class="toggle-label">Check Gmail for Updates</label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="checkGmail" name="Check Gmail for Updates">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </div>
-            
-            <button type="submit" class="submit-btn">Generate Report</button>
-            
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>Generating your report...</p>
-            </div>
-            
-            <div class="error" id="errorMsg"></div>
-        </form>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <h1>SPACE OPS</h1>
     </div>
-    
-    <script>
-        // IMPORTANT: Replace this with your actual n8n webhook URL
-        // Get this URL from your n8n Form Trigger node (click on the node and copy the Production URL)
-        // It should look like one of these formats:
-        // - https://your-n8n-instance.com/form/ping-pong-report
-        // - https://n8n.yourdomain.com/webhook/ping-pong-report
-        // - https://app.n8n.cloud/form/[some-id]
-        
-        const WEBHOOK_URL = 'https://private-agent.app.n8n.cloud/form-test/ping-pong-report';
-        
-        // Get NYC timezone offset
-        function getNYCDate() {
-            return new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"}));
-        }
-        
-        // Format date for input fields
-        function formatDate(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-        
-        // Get Monday of current week
-        function getMonday(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            return new Date(d.setDate(diff));
-        }
-        
-        // Get Sunday of current week
-        function getSunday(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? 0 : 7);
-            return new Date(d.setDate(diff));
-        }
-        
-        // Date selection functions
-        function setToday() {
-            const today = getNYCDate();
-            document.getElementById('startDate').value = formatDate(today);
-            document.getElementById('endDate').value = formatDate(today);
-            highlightActiveButton('Today');
-        }
-        
-        function setThisWeek() {
-            const today = getNYCDate();
-            const monday = getMonday(today);
-            const sunday = getSunday(today);
-            document.getElementById('startDate').value = formatDate(monday);
-            document.getElementById('endDate').value = formatDate(sunday);
-            highlightActiveButton('This Week');
-        }
-        
-        function setThisMonth() {
-            const today = getNYCDate();
-            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            document.getElementById('startDate').value = formatDate(firstDay);
-            document.getElementById('endDate').value = formatDate(lastDay);
-            highlightActiveButton('This Month');
-        }
-        
-        function setLastWeek() {
-            const today = getNYCDate();
-            const lastWeek = new Date(today.setDate(today.getDate() - 7));
-            const monday = getMonday(lastWeek);
-            const sunday = getSunday(lastWeek);
-            document.getElementById('startDate').value = formatDate(monday);
-            document.getElementById('endDate').value = formatDate(sunday);
-            highlightActiveButton('Last Week');
-        }
-        
-        function setNextWeek() {
-            const today = getNYCDate();
-            const nextWeek = new Date(today.setDate(today.getDate() + 7));
-            const monday = getMonday(nextWeek);
-            const sunday = getSunday(nextWeek);
-            document.getElementById('startDate').value = formatDate(monday);
-            document.getElementById('endDate').value = formatDate(sunday);
-            highlightActiveButton('Next Week');
-        }
-        
-        function highlightActiveButton(buttonText) {
-            document.querySelectorAll('.date-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.textContent === buttonText) {
-                    btn.classList.add('active');
-                }
-            });
-        }
-        
-        // Form submission
-        document.getElementById('reportForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                'Start Date': document.getElementById('startDate').value,
-                'End Date': document.getElementById('endDate').value,
-                'Calendar ID (leave blank for primary)': document.getElementById('calendarId').value || '',
-                'Check Gmail for Updates': document.getElementById('checkGmail').checked
-            };
-            
-            // Show loading
-            document.querySelector('.loading').classList.add('show');
-            document.querySelector('.submit-btn').disabled = true;
-            document.getElementById('errorMsg').classList.remove('show');
-            
-            try {
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (response.ok) {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('text/html')) {
-                        const html = await response.text();
-                        // Open report in new window
-                        const newWindow = window.open('', '_blank');
-                        newWindow.document.write(html);
-                        newWindow.document.close();
-                    } else {
-                        const result = await response.json();
-                        console.log('Report generated:', result);
-                        alert('Report generated successfully!');
-                    }
-                } else {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('errorMsg').textContent = 
-                    'Error generating report. Please check your webhook URL and try again.';
-                document.getElementById('errorMsg').classList.add('show');
-            } finally {
-                document.querySelector('.loading').classList.remove('show');
-                document.querySelector('.submit-btn').disabled = false;
-            }
-        });
-        
-        // Set default to today on load
-        window.addEventListener('load', () => {
-            setToday();
-        });
-    </script>
+    <div class="nav">
+      <button class="active" data-route="dashboard">🏠 <span class="label">Dashboard</span></button>
+      <button data-route="floor">🎯 <span class="label">Floor</span> <span class="tag">Live</span></button>
+      <button data-route="automations">⚙️ <span class="label">Automations</span></button>
+      <button data-route="inventory">📦 <span class="label">Inventory</span></button>
+      <button data-route="tasks">🗂️ <span class="label">Tasks</span></button>
+      <button data-route="customers">👥 <span class="label">Customers</span></button>
+      <button data-route="settings">🛠️ <span class="label">Settings</span></button>
+    </div>
+    <div class="mini">
+      <div class="chip" data-open-palette>⌘K<br><span class="muted">Command</span></div>
+      <div class="chip" data-open-drawer>🧠<br><span class="muted">Agent</span></div>
+    </div>
+    <div class="foot muted">
+      <div>Tip: <span class="kbd">Ctrl/⌘</span> + <span class="kbd">K</span> opens quick actions.</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <section class="main">
+    <div class="topbar">
+      <div class="search" role="search">
+        🔎 <input placeholder="Search tables, customers, orders, workflows…" aria-label="Search"/>
+        <span class="kbd">Ctrl/⌘ K</span>
+      </div>
+      <button class="btn ghost" id="themeBtn">🌗 Theme</button>
+      <button class="btn" data-action="sync-supabase">🔄 Sync</button>
+      <button class="btn primary" data-workflow="run-all">🚀 Run All</button>
+      <div class="avatar" title="You"></div>
+    </div>
+
+    <div class="views">
+      <!-- DASHBOARD -->
+      <div class="view active" id="view-dashboard">
+        <div class="grid kpis">
+          <div class="card">
+            <h3>Active Tables</h3>
+            <div class="big" id="kpi-active">7</div>
+            <div class="muted">+2 since 1 hr ago</div>
+          </div>
+          <div class="card">
+            <h3>Waitlist</h3>
+            <div class="big">13</div>
+            <div class="muted">Avg wait 18m</div>
+          </div>
+          <div class="card">
+            <h3>Revenue Today</h3>
+            <div class="big">$4,820</div>
+            <div class="muted">Target $6,500</div>
+          </div>
+          <div class="card">
+            <h3>Avg Session</h3>
+            <div class="big">01:12</div>
+            <div class="muted">Ping Pong</div>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="card">
+            <div class="row" style="justify-content:space-between">
+              <div class="row"><h3 style="margin:0">Quick Actions</h3></div>
+              <div class="tabs" role="tablist" data-tabs="zones">
+                <button class="tab active" data-zone="Ping Pong" role="tab">Ping Pong</button>
+                <button class="tab" data-zone="iGolf" role="tab">iGolf</button>
+                <button class="tab" data-zone="Karaoke" role="tab">Karaoke</button>
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" data-open="new-session" data-zone="Ping Pong">➕ Start Session</button>
+              <button class="btn" data-open="waitlist">📋 Open Waitlist</button>
+              <button class="btn" data-workflow="lights-scene">💡 Set Lights Scene</button>
+              <button class="btn" data-workflow="music-vibe">🎵 Play Vibe</button>
+              <button class="btn" data-workflow="close-tabs">🧾 Close Tabs</button>
+            </div>
+            <div class="muted" style="margin-top:8px">Buttons emit events with <code>data-workflow</code> so you can bind to n8n later.</div>
+          </div>
+
+          <div class="card">
+            <h3>Recent Activity</h3>
+            <div class="list" id="activity">
+              <!-- JS injects events -->
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <h3 style="margin:0">Today’s Schedule</h3>
+            <button class="btn" data-workflow="sync-calendar">📅 Pull from Google Calendar</button>
+          </div>
+          <table class="table" aria-label="Schedule">
+            <thead><tr><th>Time</th><th>Area</th><th>Booking</th><th>Guests</th><th>Action</th></tr></thead>
+            <tbody id="scheduleBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FLOOR -->
+      <div class="view" id="view-floor">
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <h3 style="margin:0">Floor Grid</h3>
+            <div class="row">
+              <button class="btn" data-workflow="floor-refresh">🔃 Refresh</button>
+              <button class="btn" data-open="map-settings">🗺️ Map Settings</button>
+            </div>
+          </div>
+          <div class="floor" id="floorGrid" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <!-- AUTOMATIONS -->
+      <div class="view" id="view-automations">
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <h3 style="margin:0">n8n Workflows</h3>
+            <div class="row">
+              <button class="btn primary" data-open="new-workflow">➕ New Workflow</button>
+              <button class="btn" data-workflow="deploy">⬆️ Deploy</button>
+            </div>
+          </div>
+          <div class="list" id="wfList"></div>
+        </div>
+      </div>
+
+      <!-- INVENTORY -->
+      <div class="view" id="view-inventory">
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <h3 style="margin:0">Inventory</h3>
+            <div class="row">
+              <button class="btn" data-action="recalc-par">🧮 Recalc PAR</button>
+              <button class="btn primary" data-workflow="create-po">📝 Create PO</button>
+            </div>
+          </div>
+          <table class="table" aria-label="Inventory">
+            <thead><tr><th>Item</th><th>On Hand</th><th>PAR</th><th>Vendor</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="invBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TASKS -->
+      <div class="view" id="view-tasks">
+        <div class="grid" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+          <div class="card"><h3>Backlog</h3><div class="list" id="col-backlog"></div></div>
+          <div class="card"><h3>Doing</h3><div class="list" id="col-doing"></div></div>
+          <div class="card"><h3>Done</h3><div class="list" id="col-done"></div></div>
+        </div>
+      </div>
+
+      <!-- CUSTOMERS -->
+      <div class="view" id="view-customers">
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <h3 style="margin:0">Customers</h3>
+            <button class="btn primary" data-open="add-customer">➕ Add</button>
+          </div>
+          <table class="table" aria-label="Customers">
+            <thead><tr><th>Name</th><th>Contact</th><th>Notes</th><th>Last Visit</th><th>Action</th></tr></thead>
+            <tbody id="custBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="view" id="view-settings">
+        <div class="card">
+          <h3>Settings</h3>
+          <div class="field"><label>Venue Name</label><input value="Space Ping Pong" /></div>
+          <div class="field"><label>Default Session Length</label>
+            <select><option>60 min</option><option selected>90 min</option><option>120 min</option></select>
+          </div>
+          <div class="field"><label>Automation Mode</label>
+            <select><option>Manual approve</option><option selected>Auto-run</option></select>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn" data-workflow="save-settings">💾 Save</button>
+            <button class="btn" data-workflow="export-config">📤 Export Config</button>
+            <button class="btn" data-workflow="import-config">📥 Import Config</button>
+          </div>
+          <div class="muted" style="margin-top:8px">All setting actions emit events to bind with Supabase / n8n later.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Drawer -->
+<aside class="drawer" id="drawer">
+  <div class="row" style="justify-content:space-between; margin-bottom:8px">
+    <h3 style="margin:0">AI Agent</h3>
+    <button class="btn" id="closeDrawer">✖️ Close</button>
+  </div>
+  <div class="field">
+    <label>Ask the agent</label>
+    <input id="agentInput" placeholder="e.g., 'Dim lights, start chill playlist, put Table 4 on waitlist'" />
+  </div>
+  <div class="row">
+    <button class="btn primary" data-workflow="agent-dispatch">🚀 Dispatch</button>
+    <button class="btn" data-workflow="agent-test">🧪 Test Tools</button>
+  </div>
+  <div style="margin-top:12px">
+    <h3>Preview</h3>
+    <div id="agentPreview" class="list"></div>
+  </div>
+</aside>
+
+<!-- Modal -->
+<div class="modal-bg" id="modalBg" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="row" style="justify-content:space-between">
+      <h3 id="modalTitle" style="margin:0">Modal</h3>
+      <button class="btn" id="closeModal">✖️</button>
+    </div>
+    <div id="modalBody" style="margin-top:8px"></div>
+    <div class="actions">
+      <button class="btn" id="modalCancel">Cancel</button>
+      <button class="btn primary" id="modalOk">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- Command Palette -->
+<div class="palette" id="palette">
+  <div class="box">
+    <header>🔧 Quick actions <input id="palInput" placeholder="Type a command… (e.g., 'start table 3')" /></header>
+    <div class="list" id="palList"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- Data (mock) ---------- */
+const state = {
+  zone:'Ping Pong',
+  schedule:[
+    {time:'6:00 PM', area:'Ping Pong', booking:'Lee • Table 4', guests:2},
+    {time:'6:30 PM', area:'iGolf', booking:'Chen • Bay 2', guests:3},
+    {time:'7:00 PM', area:'Karaoke', booking:'Kim • Rm A', guests:5},
+  ],
+  floor:[ // id, status, label
+    {id:1,status:'busy', label:'Table 1'},
+    {id:2,status:'busy', label:'Table 2'},
+    {id:3,status:'ok', label:'Table 3'},
+    {id:4,status:'busy', label:'Table 4'},
+    {id:5,status:'ok', label:'Table 5'},
+    {id:6,status:'off', label:'Table 6'},
+    {id:7,status:'ok', label:'Table 7'},
+    {id:8,status:'busy', label:'Table 8'},
+  ],
+  workflows:[
+    {id:'lights-scene', name:'Set Lights Scene', desc:'Hue → Ambient neon', status:'ready'},
+    {id:'music-vibe', name:'Play Music Vibe', desc:'Sonos → Chill playlist', status:'ready'},
+    {id:'close-tabs', name:'Close Open Tabs', desc:'POS → Square close unpaid', status:'danger'},
+    {id:'deploy', name:'Deploy All', desc:'Ship latest automations', status:'ready'},
+  ],
+  inventory:[
+    {name:'Ping Pong Balls (24ct)', on:18, par:36, vendor:'SportsPro', status:'Low'},
+    {name:'San Pellegrino 500ml', on:42, par:60, vendor:'BeverageHub', status:'OK'},
+    {name:'Lime Juice (1L)', on:3, par:12, vendor:'BarMart', status:'Critical'},
+  ],
+  tasks:{
+    backlog:['Add “Mini-Martinis” to menu','Draft safety signage for iGolf'],
+    doing:['Tweak table timer UI','Sync n8n → Supabase logs'],
+    done:['Migrate to Eero router','Install Shelly Buttons']
+  },
+  customers:[
+    {name:'Jin Park', contact:'jin@example.com', notes:'Prefers Rm A, weekends', last:'Aug 10'},
+    {name:'Sam Lee', contact:'(917) 555-0142', notes:'VIP • ping pong league', last:'Aug 18'},
+    {name:'Ana Gomez', contact:'ana@mail.com', notes:'Student discount', last:'Aug 20'}
+  ]
+};
+/* ---------- Utilities ---------- */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+function toast(msg, kind='info'){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = (kind==='ok'?'✅ ':(kind==='warn'?'⚠️ ':(kind==='bad'?'⛔ ':'💡 '))) + msg;
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{ t.style.opacity=.0; t.style.transform='translateY(8px)'; }, 2600);
+  setTimeout(()=> t.remove(), 3200);
+}
+function setRoute(route){
+  $$('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.route===route));
+  $$('.view').forEach(v=>v.classList.toggle('active', v.id === 'view-'+route));
+  toast('Navigated to '+route, 'info');
+}
+function statusPill(status){
+  if(status==='ok') return '<span class="status s-ok">Available</span>';
+  if(status==='busy') return '<span class="status s-busy">In Use</span>';
+  return '<span class="status s-off">Offline</span>';
+}
+/* ---------- Renderers ---------- */
+function renderSchedule(){
+  const tb = $('#scheduleBody'); tb.innerHTML='';
+  state.schedule.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.time}</td><td>${r.area}</td><td>${r.booking}</td><td>${r.guests}</td>
+      <td><button class="btn" data-open="edit-booking" data-name="${r.booking}">✏️ Edit</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function renderFloor(){
+  const grid = $('#floorGrid'); grid.innerHTML='';
+  state.floor.forEach(f=>{
+    const el = document.createElement('div');
+    el.className = 'tile';
+    el.innerHTML = `<div class="row" style="justify-content:space-between">
+        <strong>${f.label}</strong>${statusPill(f.status)}
+      </div>
+      <div class="row">
+        <button class="btn" data-open="start-table" data-table="${f.id}">▶️ Start</button>
+        <button class="btn" data-open="assign-guest" data-table="${f.id}">👤 Assign</button>
+        <button class="btn" data-workflow="stop-timer" data-table="${f.id}">⏹️ Stop</button>
+      </div>`;
+    grid.appendChild(el);
+  });
+}
+function renderWorkflows(){
+  const list = $('#wfList'); list.innerHTML='';
+  state.workflows.forEach(w=>{
+    const it = document.createElement('div');
+    it.className='item';
+    const badge = w.status==='ready' ? '✅ Ready' : '⛔ Needs attention';
+    it.innerHTML = `
+      <div><strong>${w.name}</strong><div class="muted">${w.desc}</div></div>
+      <div class="row">
+        <span class="muted">${badge}</span>
+        <button class="btn" data-workflow="${w.id}">Run</button>
+        <button class="btn" data-open="wf-details" data-id="${w.id}">Details</button>
+      </div>`;
+    list.appendChild(it);
+  });
+}
+function renderInventory(){
+  const tb = $('#invBody'); tb.innerHTML='';
+  state.inventory.forEach(i=>{
+    const status = i.status==='OK' ? '<span class="status s-ok">OK</span>' :
+      (i.status==='Low' ? '<span class="status s-busy">Low</span>' : '<span class="status s-off">Critical</span>');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i.name}</td><td>${i.on}</td><td>${i.par}</td><td>${i.vendor}</td><td>${status}</td>
+      <td><button class="btn" data-workflow="reorder" data-item="${i.name}">🛒 Reorder</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function renderTasks(){
+  ['backlog','doing','done'].forEach(col=>{
+    const root = $('#col-'+col); root.innerHTML='';
+    state.tasks[col].forEach((t,idx)=>{
+      const it=document.createElement('div');
+      it.className='item';
+      it.innerHTML = `<div>${t}</div>
+        <div class="row">
+          ${col!=='backlog'?`<button class="btn" data-move="${col}:prev:${idx}">⬅️</button>`:''}
+          ${col!=='done'?`<button class="btn" data-move="${col}:next:${idx}">➡️</button>`:''}
+        </div>`;
+      root.appendChild(it);
+    });
+  });
+}
+function renderCustomers(){
+  const tb=$('#custBody'); tb.innerHTML='';
+  state.customers.forEach(c=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${c.name}</td><td>${c.contact}</td><td>${c.notes}</td><td>${c.last}</td>
+    <td><button class="btn" data-open="book-customer" data-name="${c.name}">📅 Book</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function renderActivity(){
+  const el = $('#activity'); el.innerHTML='';
+  const events = [
+    'Table 2 extended by 30m',
+    'Workflow “Set Lights Scene” executed',
+    'Inventory: Lime Juice marked Critical',
+    'New customer added: Ana Gomez'
+  ];
+  events.forEach(e=>{
+    const node=document.createElement('div');
+    node.className='item';
+    node.innerHTML=`<div>${e}</div><button class="btn" data-workflow="undo">↩️ Undo</button>`;
+    el.appendChild(node);
+  });
+}
+/* ---------- Modal ---------- */
+const modal = {
+  open(title, bodyHTML, onOk){
+    $('#modalTitle').textContent=title;
+    $('#modalBody').innerHTML=bodyHTML || '';
+    $('#modalBg').classList.add('show');
+    $('#modalBg').setAttribute('aria-hidden','false');
+    modal._ok = onOk || null;
+  },
+  close(){
+    $('#modalBg').classList.remove('show');
+    $('#modalBg').setAttribute('aria-hidden','true');
+    modal._ok=null;
+  },
+  _ok:null
+};
+/* ---------- Command Palette ---------- */
+const palette = {
+  open(){
+    $('#palette').classList.add('show');
+    $('#palInput').value='';
+    palette.render('');
+    $('#palInput').focus();
+  },
+  close(){ $('#palette').classList.remove('show'); },
+  render(q){
+    const all = [
+      {t:'Start new session', a:'open:new-session'},
+      {t:'Open Waitlist', a:'open:waitlist'},
+      {t:'Run: Set Lights Scene', a:'wf:lights-scene'},
+      {t:'Run: Play Vibe', a:'wf:music-vibe'},
+      {t:'Navigate: Floor', a:'nav:floor'},
+      {t:'Navigate: Automations', a:'nav:automations'},
+      {t:'Sync Supabase', a:'act:sync'},
+    ];
+    const list = $('#palList'); list.innerHTML='';
+    all.filter(x=>x.t.toLowerCase().includes(q.toLowerCase()))
+      .forEach(x=>{
+        const b=document.createElement('button');
+        b.textContent=x.t;
+        b.dataset.action=x.a;
+        list.appendChild(b);
+      });
+  }
+};
+/* ---------- Events ---------- */
+// Navigation
+$$('.nav button').forEach(b=>b.addEventListener('click', ()=> setRoute(b.dataset.route)));
+// Tabs (zones)
+$$('[data-tabs="zones"] .tab').forEach(t=>t.addEventListener('click', ()=>{
+  $$('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active'); state.zone=t.dataset.zone;
+  toast('Zone set to '+state.zone, 'ok');
+}));
+// Buttons with data-workflow
+document.body.addEventListener('click', (e)=>{
+  const b = e.target.closest('button');
+  if(!b) return;
+
+  if(b.dataset.workflow){
+    const wf = b.dataset.workflow;
+    const detail = {workflow:wf, table:b.dataset.table, item:b.dataset.item};
+    toast('Triggered workflow: '+wf, 'ok');
+    // Hook this to n8n: POST detail
+    console.log('n8n.emit', detail);
+  }
+
+  if(b.dataset.open==='new-session'){
+    modal.open('Start Session — '+state.zone, `
+      <div class="field"><label>Guests</label><input id="gs" type="number" min="1" value="2"></div>
+      <div class="field"><label>Length</label>
+        <select id="len"><option>60 min</option><option selected>90 min</option><option>120 min</option></select>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="notes" rows="3"></textarea></div>
+    `, ()=>{
+      const payload = {guests:$('#gs').value, length:$('#len').value, notes:$('#notes').value, zone:state.zone};
+      toast('Session created ('+payload.length+', '+payload.guests+' guests)', 'ok');
+      console.log('n8n.emit', {workflow:'create-session', payload});
+    });
+  }
+
+  if(b.dataset.open==='waitlist'){
+    modal.open('Waitlist', `
+      <div class="field"><label>Name</label><input id="wl-name" placeholder="Customer name"></div>
+      <div class="field"><label>Guests</label><input id="wl-guests" type="number" value="2"></div>
+    `, ()=>{
+      toast('Added to waitlist: '+$('#wl-name').value, 'ok');
+      console.log('supabase.insert', {table:'waitlist', name:$('#wl-name').value, guests:$('#wl-guests').value});
+    });
+  }
+
+  if(b.dataset.open==='map-settings'){
+    modal.open('Map Settings', `
+      <div class="field"><label>Columns</label><input id="cols" type="number" value="4"></div>
+      <div class="field"><label>Show Offline</label>
+        <select id="showOff"><option>Yes</option><option>No</option></select>
+      </div>
+    `, ()=>{
+      toast('Map settings saved', 'ok');
+    });
+  }
+
+  if(b.dataset.open==='start-table'){
+    const table=b.dataset.table;
+    modal.open('Start '+ 'Table '+table, `
+      <div class="field"><label>Guests</label><input id="tgs" type="number" value="2"></div>
+      <div class="field"><label>Length</label><select id="tlen"><option>60 min</option><option selected>90 min</option><option>120 min</option></select></div>
+    `, ()=>{
+      toast('Table '+table+' started', 'ok');
+      console.log('n8n.emit',{workflow:'start-table', table, guests:$('#tgs').value, length:$('#tlen').value});
+    });
+  }
+
+  if(b.dataset.open==='assign-guest'){
+    const table=b.dataset.table;
+    modal.open('Assign Guest to Table '+table, `
+      <div class="field"><label>Customer</label><input id="cust" placeholder="Type name…"></div>
+      <div class="field"><label>Notes</label><input id="cnotes" placeholder="Optional"></div>
+    `, ()=>{
+      toast('Assigned '+($('#cust').value||'Unknown')+' → Table '+table, 'ok');
+      console.log('supabase.update',{table:'sessions', action:'assign', value:$('#cust').value, tableId:table});
+    });
+  }
+
+  if(b.dataset.open==='wf-details'){
+    const id=b.dataset.id;
+    openDrawer(); $('#agentPreview').innerHTML=`
+      <div class="item"><div><strong>Workflow</strong><div class="muted">${id}</div></div>
+        <button class="btn" data-workflow="${id}">Run</button></div>
+      <div class="item"><div>Last run</div><div class="muted">2m ago • 200ms</div></div>
+      <div class="item"><div>Status</div><div class="muted">OK</div></div>`;
+  }
+
+  if(b.dataset.open==='new-workflow'){
+    modal.open('Create Workflow', `
+      <div class="field"><label>Name</label><input id="wf-name" placeholder="e.g., Close Nightly"></div>
+      <div class="field"><label>Trigger</label><select id="wf-trg"><option>Manual</option><option>Schedule</option><option>Webhook</option></select></div>
+    `, ()=>{
+      const name=$('#wf-name').value||'Untitled';
+      state.workflows.push({id:name.toLowerCase().replace(/\s+/g,'-'), name, desc:'Custom', status:'ready'});
+      renderWorkflows(); toast('Workflow created', 'ok');
+    });
+  }
+
+  if(b.dataset.open==='edit-booking'){
+    const nm=b.dataset.name;
+    modal.open('Edit Booking', `
+      <div class="field"><label>Booking</label><input id="bk" value="${nm}"></div>
+      <div class="field"><label>Guests</label><input id="bkg" type="number" value="2"></div>
+    `, ()=>{ toast('Booking updated', 'ok'); });
+  }
+
+  if(b.dataset.open==='add-customer'){
+    modal.open('Add Customer', `
+      <div class="field"><label>Name</label><input id="cn" /></div>
+      <div class="field"><label>Contact</label><input id="cc" /></div>
+      <div class="field"><label>Notes</label><input id="ct" /></div>
+    `, ()=>{
+      state.customers.push({name:$('#cn').value, contact:$('#cc').value, notes:$('#ct').value, last:'Today'});
+      renderCustomers(); toast('Customer added', 'ok');
+    });
+  }
+
+  if(b.dataset.open==='book-customer'){
+    const name=b.dataset.name;
+    modal.open('Book — '+name, `
+      <div class="field"><label>Date</label><input type="date" id="bd"></div>
+      <div class="field"><label>Time</label><input type="time" id="bt"></div>
+    `, ()=>{
+      toast('Booked '+name, 'ok');
+      console.log('n8n.emit',{workflow:'book-customer', name, date:$('#bd').value, time:$('#bt').value});
+    });
+  }
+
+  if(b.dataset.action==='recalc-par'){ toast('Recalculating PAR levels…', 'info'); }
+  if(b.dataset.action==='sync-supabase'){ toast('Syncing with Supabase…', 'ok'); console.log('supabase.sync'); }
+
+  if(b.dataset.move){
+    const [col, dir, idxStr] = b.dataset.move.split(':'); const idx=+idxStr;
+    const item = state.tasks[col][idx];
+    state.tasks[col].splice(idx,1);
+    if(dir==='next'){
+      if(col==='backlog') state.tasks.doing.push(item);
+      else if(col==='doing') state.tasks.done.push(item);
+    } else {
+      if(col==='doing') state.tasks.backlog.push(item);
+      else if(col==='done') state.tasks.doing.push(item);
+    }
+    renderTasks();
+  }
+
+  if(b.id==='themeBtn'){ document.body.classList.toggle('light'); toast('Theme toggled'); }
+});
+// Modal controls
+$('#closeModal').onclick = ()=> modal.close();
+$('#modalCancel').onclick = ()=> modal.close();
+$('#modalOk').onclick = ()=>{ if(modal._ok) modal._ok(); modal.close(); };
+// Drawer
+function openDrawer(){ $('#drawer').classList.add('open'); }
+function closeDrawer(){ $('#drawer').classList.remove('open'); }
+$('#closeDrawer').onclick = closeDrawer;
+$('[data-open-drawer]').onclick = openDrawer;
+// Palette
+$('[data-open-palette]').onclick = ()=> palette.open();
+$('#palInput').addEventListener('input', e=> palette.render(e.target.value));
+$('#palList').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const a=b.dataset.action;
+  if(a.startsWith('open:')){ const key=a.split(':')[1]; document.querySelectorAll(`[data-open="${key}"]`)[0]?.click(); }
+  if(a.startsWith('wf:')){ const id=a.split(':')[1]; toast('Triggered workflow: '+id, 'ok'); }
+  if(a.startsWith('nav:')){ const r=a.split(':')[1]; setRoute(r); }
+  if(a==='act:sync'){ toast('Syncing with Supabase…','ok'); }
+  palette.close();
+});
+document.addEventListener('keydown', (e)=>{
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); palette.open(); }
+  if(e.key==='Escape'){ palette.close(); modal.close(); closeDrawer(); }
+});
+// Agent preview
+$('#agentInput').addEventListener('input', e=>{
+  const q=e.target.value.trim();
+  $('#agentPreview').innerHTML = q ? `
+    <div class="item"><div>Intent</div><div class="muted">control.devices.scene</div></div>
+    <div class="item"><div>Entities</div><div class="muted">{"zone":"${state.zone}","lights":"dim","playlist":"chill"}</div></div>
+    <div class="item"><div>Plan</div><div class="muted">Set lights → Play music → Update floor</div></div>
+  ` : '';
+});
+/* ---------- Initial render ---------- */
+renderSchedule(); renderFloor(); renderWorkflows(); renderInventory(); renderTasks(); renderCustomers(); renderActivity();
+/* ---------- Demo: bump active KPI ---------- */
+setInterval(()=>{ const n=+$('#kpi-active').textContent; $('#kpi-active').textContent = (n%12)+1; }, 6000);
+/* ---------- Light theme (optional) ---------- */
+const lightCSS = document.createElement('style');
+lightCSS.textContent = `
+  body.light{ --bg:#f6f9ff; --bg-2:#eef3ff; --surface:#ffffff; --elev:#f7fbff; --text:#0b1220; --muted:#516178; }
+  body.light .sidebar, body.light .card, body.light .tile, body.light .item, body.light .modal, body.light .drawer { background: #ffffff; }
+  body.light .sidebar{ background:#f5f9ff; }
+  body.light .nav button:hover{ background:#eaf2ff }
+  body.light .nav button.active{ background:linear-gradient(90deg, rgba(0,229,255,.12), rgba(138,43,226,.08)); }
+  body.light .search{ background:#eef3ff; }
+`;
+document.head.appendChild(lightCSS);
+</script>
 </body>
 </html>
