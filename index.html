@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Space Ops — Visual Preview</title>
+<title>Space Ops — Management System</title>
 <style>
   :root{
     --bg:#0b0f14;
@@ -37,8 +37,9 @@
     display:grid;
     grid-template-columns: 260px 1fr;
     min-height:100dvh;
+    position:relative;
   }
-  /* Sidebar */
+  /* Collapsible Sidebar */
   .sidebar{
     position:sticky; top:0; align-self:start;
     height:100dvh;
@@ -46,24 +47,61 @@
     border-right:1px solid rgba(255,255,255,.06);
     padding:18px 16px;
     backdrop-filter: blur(10px);
+    transition: width 0.3s ease, transform 0.3s ease;
+    overflow:hidden;
+    width:260px;
+  }
+  .sidebar.collapsed{
+    width:72px;
+  }
+  .toggle-sidebar{
+    position:absolute;
+    right:10px;
+    top:10px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:8px;
+    padding:4px 8px;
+    cursor:pointer;
+    transition:.18s ease;
+  }
+  .toggle-sidebar:hover{
+    background:rgba(255,255,255,.1);
+    border-color:rgba(0,229,255,.5);
   }
   .brand{
     display:flex;align-items:center;gap:12px;padding:10px 8px;margin-bottom:10px;
+    position:relative;
   }
   .logo{
     width:36px;height:36px;border-radius:10px;
-    background:
-      radial-gradient(120% 120% at 30% 20%, rgba(0,229,255,.6), transparent 60%),
-      radial-gradient(120% 120% at 70% 80%, rgba(138,43,226,.55), transparent 60%),
-      #0b0f14;
+    background: linear-gradient(135deg, #00e5ff, #8a2be2);
     box-shadow: var(--glow);
     position:relative;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    font-weight:bold;
+    color:white;
   }
   .logo:after{
-    content:""; position:absolute; inset:6px; border-radius:8px;
-    background:conic-gradient(from 180deg, rgba(255,255,255,.1), rgba(255,255,255,0) 40%, rgba(255,255,255,.1) 70%);
+    content:"S"; 
+    position:absolute; 
+    font-family: 'Arial Black', sans-serif;
   }
-  .brand h1{font-size:15px;letter-spacing:.2em;margin:0;text-transform:uppercase;color:#c9e7ff;}
+  .brand h1{
+    font-size:15px;
+    letter-spacing:.2em;
+    margin:0;
+    text-transform:uppercase;
+    color:#c9e7ff;
+    white-space:nowrap;
+  }
+  .sidebar.collapsed .brand h1{
+    display:none;
+  }
   .nav{
     margin-top:8px;
     display:flex; flex-direction:column; gap:6px;
@@ -72,21 +110,31 @@
     appearance:none;border:0;background:transparent;color:var(--text);
     text-align:left;padding:12px 12px;border-radius:12px;display:flex;align-items:center;gap:10px;
     transition:.18s ease; cursor:pointer;
+    white-space:nowrap;
+    overflow:hidden;
   }
   .nav button:hover{background:#182236}
   .nav button.active{background:linear-gradient(90deg, rgba(0,229,255,.15), rgba(138,43,226,.08)); box-shadow: var(--glow)}
   .nav .tag{margin-left:auto;font-size:12px;opacity:.8;padding:2px 8px;border-radius:999px;background:#182236}
+  .sidebar.collapsed .nav .label,
+  .sidebar.collapsed .nav .tag{display:none}
   .sidebar .mini{
     display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 2px;
   }
+  .sidebar.collapsed .mini{
+    grid-template-columns:1fr;
+  }
   .chip{
     padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#0e1524;cursor:pointer;text-align:center;
+    overflow:hidden;
   }
   .chip:hover{border-color:rgba(0,229,255,.5); box-shadow:var(--glow)}
+  .sidebar.collapsed .chip .muted{display:none}
   .foot{
     position:absolute; bottom:14px; left:16px; right:16px; opacity:.9; font-size:12px;
     border-top:1px solid rgba(255,255,255,.08); padding-top:10px;
   }
+  .sidebar.collapsed .foot{display:none}
   /* Main */
   .main{
     min-width:0; display:flex; flex-direction:column;
@@ -101,9 +149,28 @@
   .search{
     flex:1; display:flex; align-items:center; gap:10px;
     background:#0e1524; border:1px solid rgba(255,255,255,.08); border-radius:999px; padding:8px 12px;
+    position:relative;
   }
   .search input{
     border:0;background:transparent; color:var(--text); outline:none; width:100%;
+  }
+  .search-buttons{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .search-btn{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:8px;
+    padding:6px 10px;
+    cursor:pointer;
+    transition:.18s ease;
+    font-size:12px;
+  }
+  .search-btn:hover{
+    background:rgba(0,229,255,.15);
+    border-color:rgba(0,229,255,.5);
   }
   .btn{
     appearance:none; border:1px solid rgba(255,255,255,.1); background:#101826; color:var(--text);
@@ -112,7 +179,21 @@
   .btn:hover{border-color:rgba(0,229,255,.6); box-shadow:var(--glow)}
   .btn.primary{background:linear-gradient(90deg, rgba(0,229,255,.15), rgba(138,43,226,.15)); border-color:rgba(0,229,255,.35)}
   .btn.ghost{background:transparent}
-  .avatar{width:28px;height:28px;border-radius:999px;background:radial-gradient(circle at 30% 30%, #64e1ff, #7e3ff2);}
+  .btn.danger{background:rgba(239,68,68,.15); border-color:rgba(239,68,68,.35)}
+  .avatar{
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    background: linear-gradient(135deg, #00e5ff, #8a2be2);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    font-weight:bold;
+    color:white;
+    box-shadow: var(--glow);
+  }
   .views{padding:18px; display:grid; gap:18px;}
   .view{display:none;}
   .view.active{display:block;}
@@ -132,14 +213,133 @@
   .muted{color:var(--muted)}
   .row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
   .split{display:grid; grid-template-columns: 1.2fr .8fr; gap:16px;}
-  .floor{
-    display:grid; gap:12px; grid-template-columns: repeat(4, minmax(0,1fr));
+  /* Weather Widget */
+  .weather-widget{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
   }
-  .tile{
-    padding:14px; border-radius:14px; background:#0f1525; border:1px solid rgba(255,255,255,.06);
-    display:grid; gap:8px; cursor:pointer; transition:.18s ease;
+  .weather-main{
+    display:flex;
+    align-items:center;
+    gap:12px;
   }
-  .tile:hover{border-color:rgba(0,229,255,.5); box-shadow:var(--glow)}
+  .weather-icon{
+    font-size:32px;
+  }
+  .weather-info{
+    display:flex;
+    flex-direction:column;
+  }
+  .weather-temp{
+    font-size:24px;
+    font-weight:bold;
+  }
+  .weather-desc{
+    font-size:12px;
+    color:var(--muted);
+  }
+  /* Floor Grid */
+  .floor-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .location-selector{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .location-dropdown{
+    background:#0e1524;
+    border:1px solid rgba(255,255,255,.08);
+    color:var(--text);
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .floor-grid{
+    display:grid;
+    grid-template-columns: repeat(14, minmax(0,1fr));
+    grid-template-rows: repeat(6, minmax(80px,1fr));
+    gap:8px;
+    padding:12px;
+    background:rgba(0,0,0,.2);
+    border-radius:12px;
+    min-height:480px;
+  }
+  .table-card{
+    background:#0f1525;
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:12px;
+    padding:8px;
+    cursor:pointer;
+    transition:.18s ease;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .table-card:hover{
+    border-color:rgba(0,229,255,.5);
+    box-shadow:var(--glow);
+  }
+  .table-card.square{
+    grid-column:span 1;
+    grid-row:span 1;
+  }
+  .table-card.rectangle{
+    grid-column:span 2;
+    grid-row:span 1;
+  }
+  .table-card.circle{
+    grid-column:span 1;
+    grid-row:span 1;
+    border-radius:50%;
+  }
+  .table-name{
+    font-weight:bold;
+    font-size:14px;
+    margin-bottom:4px;
+  }
+  .table-timer{
+    font-size:12px;
+    color:var(--muted);
+  }
+  .table-status-indicator{
+    position:absolute;
+    top:4px;
+    right:4px;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+  }
+  .table-status-indicator.available{background:var(--ok)}
+  .table-status-indicator.occupied{background:var(--warn)}
+  .table-status-indicator.reserved{background:var(--bad)}
+  /* Reservation Table */
+  .location-buttons{
+    display:flex;
+    gap:8px;
+    margin:12px 0;
+  }
+  .location-btn{
+    padding:8px 16px;
+    border:1px solid rgba(255,255,255,.08);
+    background:#0e1524;
+    color:var(--text);
+    border-radius:8px;
+    cursor:pointer;
+    transition:.18s ease;
+  }
+  .location-btn:hover,
+  .location-btn.active{
+    background:rgba(0,229,255,.15);
+    border-color:rgba(0,229,255,.5);
+  }
   .status{font-size:12px; padding:4px 8px; border-radius:999px; width:max-content}
   .s-ok{background:rgba(52,211,153,.15); color:#a7f3d0}
   .s-busy{background:rgba(245,158,11,.15); color:#fde68a}
@@ -162,12 +362,166 @@
   }
   .table tr td:first-child{border-top-left-radius:10px; border-bottom-left-radius:10px}
   .table tr td:last-child{border-top-right-radius:10px; border-bottom-right-radius:10px}
-  /* Drawer & Modal & Toasts */
+  .action-btns{
+    display:flex;
+    gap:4px;
+  }
+  .icon-btn{
+    padding:6px;
+    border-radius:6px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    cursor:pointer;
+    transition:.18s ease;
+  }
+  .icon-btn:hover{
+    background:rgba(0,229,255,.15);
+    border-color:rgba(0,229,255,.5);
+  }
+  /* Settings Panel */
+  .settings-section{
+    margin-bottom:24px;
+  }
+  .settings-section h4{
+    color:#c9e7ff;
+    margin-bottom:12px;
+    font-size:16px;
+  }
+  .setting-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px;
+    background:#0f1525;
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:10px;
+    margin-bottom:8px;
+  }
+  .toggle-switch{
+    position:relative;
+    width:48px;
+    height:24px;
+    background:#182236;
+    border-radius:999px;
+    cursor:pointer;
+    transition:.3s ease;
+  }
+  .toggle-switch.active{
+    background:var(--primary);
+  }
+  .toggle-switch:after{
+    content:'';
+    position:absolute;
+    width:20px;
+    height:20px;
+    background:white;
+    border-radius:50%;
+    top:2px;
+    left:2px;
+    transition:.3s ease;
+  }
+  .toggle-switch.active:after{
+    transform:translateX(24px);
+  }
+  /* Schedule View */
+  .schedule-calendar{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:8px;
+    margin-top:16px;
+  }
+  .calendar-day{
+    padding:12px;
+    background:#0f1525;
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:10px;
+    min-height:100px;
+  }
+  .calendar-day-header{
+    font-weight:bold;
+    color:#c9e7ff;
+    margin-bottom:8px;
+  }
+  .calendar-event{
+    font-size:12px;
+    padding:4px 6px;
+    background:rgba(0,229,255,.15);
+    border-radius:6px;
+    margin-bottom:4px;
+  }
+  /* AI Agent Panel */
+  .ai-panel{
+    height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  .ai-chat{
+    flex:1;
+    overflow-y:auto;
+    padding:12px;
+    background:rgba(0,0,0,.2);
+    border-radius:12px;
+    margin:12px 0;
+  }
+  .ai-message{
+    padding:10px;
+    margin-bottom:8px;
+    border-radius:10px;
+  }
+  .ai-message.user{
+    background:rgba(0,229,255,.15);
+    margin-left:20%;
+  }
+  .ai-message.assistant{
+    background:rgba(138,43,226,.15);
+    margin-right:20%;
+  }
+  .ai-input-area{
+    display:flex;
+    gap:8px;
+    padding:12px;
+    background:#0f1525;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .ai-input{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--text);
+    outline:none;
+  }
+  .ai-input-buttons{
+    display:flex;
+    gap:4px;
+  }
+  .ai-prompts{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+  .ai-prompt-chip{
+    padding:6px 12px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:999px;
+    font-size:12px;
+    cursor:pointer;
+    transition:.18s ease;
+  }
+  .ai-prompt-chip:hover{
+    background:rgba(0,229,255,.15);
+    border-color:rgba(0,229,255,.5);
+  }
+  /* Drawer & Modal */
   .drawer{
-    position:fixed; top:0; right:-420px; width:420px; height:100dvh;
+    position:fixed; top:0; right:-480px; width:480px; height:100dvh;
     background:linear-gradient(180deg, rgba(16,24,38,.98), rgba(16,24,38,.92));
     border-left:1px solid rgba(255,255,255,.08); box-shadow: var(--shadow);
     transition:.3s ease; z-index:20; padding:16px;
+    display:flex;
+    flex-direction:column;
   }
   .drawer.open{right:0}
   .modal-bg{
@@ -176,11 +530,12 @@
   }
   .modal-bg.show{display:flex}
   .modal{
-    width:min(680px, 92vw); background:#0f1525; border:1px solid rgba(255,255,255,.08);
+    width:min(720px, 92vw); background:#0f1525; border:1px solid rgba(255,255,255,.08);
     border-radius:16px; padding:18px; box-shadow: var(--shadow);
   }
   .modal .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
   .field{display:grid; gap:6px; margin:8px 0}
+  .field label{color:#c9e7ff; font-size:13px}
   .field input,.field select,.field textarea{
     background:#0b1220; color:var(--text); border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:10px; outline:none;
   }
@@ -199,22 +554,64 @@
   /* Responsive */
   @media (max-width: 960px){
     .app{grid-template-columns: 72px 1fr;}
+    .sidebar{width:72px}
     .brand h1{display:none}
     .nav .label{display:none}
     .split{grid-template-columns: 1fr}
-    .floor{grid-template-columns: repeat(2, minmax(0,1fr))}
+    .floor-grid{grid-template-columns: repeat(7, minmax(0,1fr))}
   }
   @media (max-width: 560px){
     .kpis{grid-template-columns: repeat(2, minmax(0,1fr))}
+    .floor-grid{grid-template-columns: repeat(4, minmax(0,1fr))}
   }
+  /* Light theme */
+  body.light{
+    --bg:#f6f9ff;
+    --bg-2:#eef3ff;
+    --surface:#ffffff;
+    --elev:#f7fbff;
+    --text:#0b1220;
+    --muted:#516178;
+    --primary:#0099cc;
+    --primary-2:#6a1b9a;
+  }
+  body.light .sidebar,
+  body.light .card,
+  body.light .table-card,
+  body.light .item,
+  body.light .modal,
+  body.light .drawer{
+    background:#ffffff;
+  }
+  body.light .sidebar{background:#f5f9ff}
+  body.light .nav button:hover{background:#eaf2ff}
+  body.light .nav button.active{background:linear-gradient(90deg, rgba(0,153,204,.12), rgba(106,27,154,.08))}
+  body.light .search,
+  body.light .location-dropdown,
+  body.light .location-btn,
+  body.light .field input,
+  body.light .field select,
+  body.light .field textarea{
+    background:#eef3ff;
+    color:#0b1220;
+  }
+  body.light .table td{background:#f7fbff}
+  body.light .btn{background:#f0f6ff; color:#0b1220}
+  body.light .btn:hover{background:#e0efff}
+  body.light .btn.primary{background:linear-gradient(90deg, rgba(0,153,204,.15), rgba(106,27,154,.15))}
+  body.light .setting-item,
+  body.light .calendar-day{background:#f7fbff}
+  body.light .floor-grid{background:rgba(0,0,0,.05)}
+  body.light .ai-chat{background:rgba(0,0,0,.03)}
 </style>
 </head>
 <body>
 <div class="app">
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
+    <button class="toggle-sidebar" id="toggleSidebar">☰</button>
     <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
+      <div class="logo" id="spaceLogo" title="Return to Dashboard"></div>
       <h1>SPACE OPS</h1>
     </div>
     <div class="nav">
@@ -223,7 +620,7 @@
       <button data-route="automations">⚙️ <span class="label">Automations</span></button>
       <button data-route="inventory">📦 <span class="label">Inventory</span></button>
       <button data-route="tasks">🗂️ <span class="label">Tasks</span></button>
-      <button data-route="customers">👥 <span class="label">Customers</span></button>
+      <button data-route="schedule">📅 <span class="label">Schedule</span></button>
       <button data-route="settings">🛠️ <span class="label">Settings</span></button>
     </div>
     <div class="mini">
@@ -231,7 +628,7 @@
       <div class="chip" data-open-drawer>🧠<br><span class="muted">Agent</span></div>
     </div>
     <div class="foot muted">
-      <div>Tip: <span class="kbd">Ctrl/⌘</span> + <span class="kbd">K</span> opens quick actions.</div>
+      <div id="appTips">Tip: Use voice commands for hands-free control</div>
     </div>
   </aside>
 
@@ -239,13 +636,17 @@
   <section class="main">
     <div class="topbar">
       <div class="search" role="search">
-        🔎 <input placeholder="Search tables, customers, orders, workflows…" aria-label="Search"/>
-        <span class="kbd">Ctrl/⌘ K</span>
+        🔎 <input placeholder="Search reservations, tables, activities, settings..." aria-label="Search"/>
+        <div class="search-buttons">
+          <button class="search-btn" title="Voice Search">🎤</button>
+          <button class="search-btn" title="Upload Image">📷</button>
+          <button class="search-btn" title="AI Mode">🤖</button>
+        </div>
       </div>
       <button class="btn ghost" id="themeBtn">🌗 Theme</button>
       <button class="btn" data-action="sync-supabase">🔄 Sync</button>
-      <button class="btn primary" data-workflow="run-all">🚀 Run All</button>
-      <div class="avatar" title="You"></div>
+      <button class="btn primary" id="startEndDay">🌅 Start Day</button>
+      <div class="avatar" id="spaceLogo2">S</div>
     </div>
 
     <div class="views">
@@ -253,24 +654,31 @@
       <div class="view active" id="view-dashboard">
         <div class="grid kpis">
           <div class="card">
+            <div class="weather-widget">
+              <h3>Weather</h3>
+              <div class="weather-main">
+                <span class="weather-icon">☀️</span>
+                <div class="weather-info">
+                  <span class="weather-temp">72°F</span>
+                  <span class="weather-desc">Clear skies</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
             <h3>Active Tables</h3>
             <div class="big" id="kpi-active">7</div>
             <div class="muted">+2 since 1 hr ago</div>
           </div>
           <div class="card">
-            <h3>Waitlist</h3>
-            <div class="big">13</div>
-            <div class="muted">Avg wait 18m</div>
+            <h3>Avg Session</h3>
+            <div class="big">01:12</div>
+            <div class="muted">All activities</div>
           </div>
           <div class="card">
             <h3>Revenue Today</h3>
             <div class="big">$4,820</div>
             <div class="muted">Target $6,500</div>
-          </div>
-          <div class="card">
-            <h3>Avg Session</h3>
-            <div class="big">01:12</div>
-            <div class="muted">Ping Pong</div>
           </div>
         </div>
 
@@ -279,19 +687,18 @@
             <div class="row" style="justify-content:space-between">
               <div class="row"><h3 style="margin:0">Quick Actions</h3></div>
               <div class="tabs" role="tablist" data-tabs="zones">
-                <button class="tab active" data-zone="Ping Pong" role="tab">Ping Pong</button>
-                <button class="tab" data-zone="iGolf" role="tab">iGolf</button>
-                <button class="tab" data-zone="Karaoke" role="tab">Karaoke</button>
+                <button class="tab active" data-zone="Ping Pong" role="tab">🏓 Ping Pong</button>
+                <button class="tab" data-zone="iGolf" role="tab">⛳ iGolf</button>
+                <button class="tab" data-zone="Karaoke" role="tab">🎤 Karaoke</button>
+                <button class="tab" data-zone="Billiards" role="tab">🎱 Billiards</button>
               </div>
             </div>
             <div class="row" style="margin-top:10px">
               <button class="btn primary" data-open="new-session" data-zone="Ping Pong">➕ Start Session</button>
-              <button class="btn" data-open="waitlist">📋 Open Waitlist</button>
-              <button class="btn" data-workflow="lights-scene">💡 Set Lights Scene</button>
+              <button class="btn" data-open="schedule-form">📅 Schedule</button>
+              <button class="btn" data-open="order-form">📝 Order Form</button>
               <button class="btn" data-workflow="music-vibe">🎵 Play Vibe</button>
-              <button class="btn" data-workflow="close-tabs">🧾 Close Tabs</button>
             </div>
-            <div class="muted" style="margin-top:8px">Buttons emit events with <code>data-workflow</code> so you can bind to n8n later.</div>
           </div>
 
           <div class="card">
@@ -304,11 +711,26 @@
 
         <div class="card">
           <div class="row" style="justify-content:space-between">
-            <h3 style="margin:0">Today’s Schedule</h3>
+            <h3 style="margin:0">Today's Reservations</h3>
             <button class="btn" data-workflow="sync-calendar">📅 Pull from Google Calendar</button>
           </div>
-          <table class="table" aria-label="Schedule">
-            <thead><tr><th>Time</th><th>Area</th><th>Booking</th><th>Guests</th><th>Action</th></tr></thead>
+          <div class="location-buttons">
+            <button class="location-btn active">🏓 Ping Pong</button>
+            <button class="location-btn">⛳ iGolf</button>
+            <button class="location-btn">🎤 Karaoke</button>
+            <button class="location-btn">🎱 Billiards</button>
+          </div>
+          <table class="table" aria-label="Reservations">
+            <thead>
+              <tr>
+                <th>Time (Duration)</th>
+                <th>Name (Host)</th>
+                <th>Guests</th>
+                <th>Sales Type</th>
+                <th>Details</th>
+                <th>Action</th>
+              </tr>
+            </thead>
             <tbody id="scheduleBody"></tbody>
           </table>
         </div>
@@ -317,14 +739,24 @@
       <!-- FLOOR -->
       <div class="view" id="view-floor">
         <div class="card">
-          <div class="row" style="justify-content:space-between">
-            <h3 style="margin:0">Floor Grid</h3>
+          <div class="floor-header">
+            <div class="location-selector">
+              <h3 style="margin:0">Floor Grid</h3>
+              <select class="location-dropdown">
+                <option>🏓 Ping Pong</option>
+                <option>⛳ iGolf</option>
+                <option>🎤 Karaoke</option>
+                <option>🎱 Billiards</option>
+              </select>
+            </div>
             <div class="row">
               <button class="btn" data-workflow="floor-refresh">🔃 Refresh</button>
-              <button class="btn" data-open="map-settings">🗺️ Map Settings</button>
+              <button class="btn" data-open="edit-floor-plan">🗺️ Edit Floor Plan</button>
             </div>
           </div>
-          <div class="floor" id="floorGrid" aria-live="polite"></div>
+          <div class="floor-grid" id="floorGrid">
+            <!-- Table cards will be dynamically placed here -->
+          </div>
         </div>
       </div>
 
@@ -332,7 +764,7 @@
       <div class="view" id="view-automations">
         <div class="card">
           <div class="row" style="justify-content:space-between">
-            <h3 style="margin:0">n8n Workflows</h3>
+            <h3 style="margin:0">Workflows (Spotify Enabled)</h3>
             <div class="row">
               <button class="btn primary" data-open="new-workflow">➕ New Workflow</button>
               <button class="btn" data-workflow="deploy">⬆️ Deploy</button>
@@ -368,60 +800,107 @@
         </div>
       </div>
 
-      <!-- CUSTOMERS -->
-      <div class="view" id="view-customers">
+      <!-- SCHEDULE -->
+      <div class="view" id="view-schedule">
         <div class="card">
           <div class="row" style="justify-content:space-between">
-            <h3 style="margin:0">Customers</h3>
-            <button class="btn primary" data-open="add-customer">➕ Add</button>
+            <h3 style="margin:0">Schedule Management</h3>
+            <button class="btn primary" data-open="new-booking">➕ New Booking</button>
           </div>
-          <table class="table" aria-label="Customers">
-            <thead><tr><th>Name</th><th>Contact</th><th>Notes</th><th>Last Visit</th><th>Action</th></tr></thead>
-            <tbody id="custBody"></tbody>
-          </table>
+          <div class="schedule-calendar" id="scheduleCalendar">
+            <!-- Calendar view will be rendered here -->
+          </div>
         </div>
       </div>
 
       <!-- SETTINGS -->
       <div class="view" id="view-settings">
         <div class="card">
-          <h3>Settings</h3>
-          <div class="field"><label>Venue Name</label><input value="Space Ping Pong" /></div>
-          <div class="field"><label>Default Session Length</label>
-            <select><option>60 min</option><option selected>90 min</option><option>120 min</option></select>
+          <h3>System Settings</h3>
+          
+          <div class="settings-section">
+            <h4>General</h4>
+            <div class="setting-item">
+              <span>Venue Name</span>
+              <input value="Space Ping Pong" style="background:#0b1220; color:var(--text); border:1px solid rgba(255,255,255,.12); border-radius:8px; padding:8px"/>
+            </div>
+            <div class="setting-item">
+              <span>Default Session Length</span>
+              <select style="background:#0b1220; color:var(--text); border:1px solid rgba(255,255,255,.12); border-radius:8px; padding:8px">
+                <option>60 min</option>
+                <option selected>90 min</option>
+                <option>120 min</option>
+              </select>
+            </div>
           </div>
-          <div class="field"><label>Automation Mode</label>
-            <select><option>Manual approve</option><option selected>Auto-run</option></select>
+
+          <div class="settings-section">
+            <h4>Automation</h4>
+            <div class="setting-item">
+              <span>Auto-run workflows</span>
+              <div class="toggle-switch active" data-setting="auto-run"></div>
+            </div>
+            <div class="setting-item">
+              <span>Spotify integration</span>
+              <div class="toggle-switch active" data-setting="spotify"></div>
+            </div>
+            <div class="setting-item">
+              <span>Supabase sync</span>
+              <div class="toggle-switch active" data-setting="supabase"></div>
+            </div>
           </div>
-          <div class="row" style="margin-top:10px">
-            <button class="btn" data-workflow="save-settings">💾 Save</button>
+
+          <div class="settings-section">
+            <h4>Notifications</h4>
+            <div class="setting-item">
+              <span>Email notifications</span>
+              <div class="toggle-switch" data-setting="email"></div>
+            </div>
+            <div class="setting-item">
+              <span>SMS alerts</span>
+              <div class="toggle-switch" data-setting="sms"></div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:20px">
+            <button class="btn primary" data-workflow="save-settings">💾 Save Settings</button>
             <button class="btn" data-workflow="export-config">📤 Export Config</button>
             <button class="btn" data-workflow="import-config">📥 Import Config</button>
+            <button class="btn danger" data-workflow="reset-settings">🔄 Reset to Default</button>
           </div>
-          <div class="muted" style="margin-top:8px">All setting actions emit events to bind with Supabase / n8n later.</div>
         </div>
       </div>
     </div>
   </section>
 </div>
 
-<!-- Drawer -->
+<!-- AI Agent Drawer -->
 <aside class="drawer" id="drawer">
-  <div class="row" style="justify-content:space-between; margin-bottom:8px">
-    <h3 style="margin:0">AI Agent</h3>
-    <button class="btn" id="closeDrawer">✖️ Close</button>
-  </div>
-  <div class="field">
-    <label>Ask the agent</label>
-    <input id="agentInput" placeholder="e.g., 'Dim lights, start chill playlist, put Table 4 on waitlist'" />
-  </div>
-  <div class="row">
-    <button class="btn primary" data-workflow="agent-dispatch">🚀 Dispatch</button>
-    <button class="btn" data-workflow="agent-test">🧪 Test Tools</button>
-  </div>
-  <div style="margin-top:12px">
-    <h3>Preview</h3>
-    <div id="agentPreview" class="list"></div>
+  <div class="ai-panel">
+    <div class="row" style="justify-content:space-between; margin-bottom:8px">
+      <h3 style="margin:0">AI Agent</h3>
+      <button class="btn" id="closeDrawer">✖️</button>
+    </div>
+    
+    <div class="ai-chat" id="aiChat">
+      <div class="ai-message assistant">Hello! I'm your Space Ops AI assistant. How can I help you manage your venue today?</div>
+    </div>
+    
+    <div class="ai-input-area">
+      <input class="ai-input" id="aiInput" placeholder="Ask me anything..." />
+      <div class="ai-input-buttons">
+        <button class="icon-btn" title="Attach file">📎</button>
+        <button class="icon-btn" title="Voice input">🎤</button>
+        <button class="btn primary" id="sendAI">Send</button>
+      </div>
+    </div>
+    
+    <div class="ai-prompts">
+      <div class="ai-prompt-chip">Check today's schedule</div>
+      <div class="ai-prompt-chip">Start a ping pong session</div>
+      <div class="ai-prompt-chip">Show revenue report</div>
+      <div class="ai-prompt-chip">Manage inventory</div>
+    </div>
   </div>
 </aside>
 
@@ -455,46 +934,52 @@
 /* ---------- Data (mock) ---------- */
 const state = {
   zone:'Ping Pong',
+  dayStarted: false,
   schedule:[
-    {time:'6:00 PM', area:'Ping Pong', booking:'Lee • Table 4', guests:2},
-    {time:'6:30 PM', area:'iGolf', booking:'Chen • Bay 2', guests:3},
-    {time:'7:00 PM', area:'Karaoke', booking:'Kim • Rm A', guests:5},
+    {time:'6:00 PM', duration:'90 min', name:'Lee Park', guests:2, salesType:'Walk-in', details:'Table 4 requested'},
+    {time:'6:30 PM', duration:'60 min', name:'Chen Wu', guests:3, salesType:'Online', details:'Birthday party'},
+    {time:'7:00 PM', duration:'120 min', name:'Kim Davis', guests:5, salesType:'Member', details:'VIP member'},
   ],
-  floor:[ // id, status, label
-    {id:1,status:'busy', label:'Table 1'},
-    {id:2,status:'busy', label:'Table 2'},
-    {id:3,status:'ok', label:'Table 3'},
-    {id:4,status:'busy', label:'Table 4'},
-    {id:5,status:'ok', label:'Table 5'},
-    {id:6,status:'off', label:'Table 6'},
-    {id:7,status:'ok', label:'Table 7'},
-    {id:8,status:'busy', label:'Table 8'},
+  floorTables:[
+    {id:'P1', name:'P1', shape:'square', status:'available', x:0, y:0},
+    {id:'P2', name:'P2', shape:'square', status:'occupied', x:2, y:0},
+    {id:'P3', name:'P3', shape:'rectangle', status:'occupied', x:4, y:0},
+    {id:'P4', name:'P4', shape:'circle', status:'reserved', x:7, y:0},
+    {id:'D1', name:'D1', shape:'rectangle', status:'available', x:0, y:2},
+    {id:'D2', name:'D2', shape:'square', status:'occupied', x:3, y:2},
+    {id:'B1', name:'B1', shape:'circle', status:'available', x:5, y:2},
+    {id:'B2', name:'B2', shape:'rectangle', status:'occupied', x:7, y:2},
   ],
   workflows:[
-    {id:'lights-scene', name:'Set Lights Scene', desc:'Hue → Ambient neon', status:'ready'},
-    {id:'music-vibe', name:'Play Music Vibe', desc:'Sonos → Chill playlist', status:'ready'},
-    {id:'close-tabs', name:'Close Open Tabs', desc:'POS → Square close unpaid', status:'danger'},
-    {id:'deploy', name:'Deploy All', desc:'Ship latest automations', status:'ready'},
+    {id:'spotify-playlist', name:'Spotify Playlist Control', desc:'Control venue music via Spotify', status:'ready'},
+    {id:'music-vibe', name:'Set Music Vibe', desc:'Spotify → Chill playlist', status:'ready'},
+    {id:'table-timer', name:'Table Timer Alert', desc:'Notify when session ends', status:'ready'},
+    {id:'daily-report', name:'Daily Revenue Report', desc:'Generate end-of-day summary', status:'ready'},
   ],
   inventory:[
     {name:'Ping Pong Balls (24ct)', on:18, par:36, vendor:'SportsPro', status:'Low'},
     {name:'San Pellegrino 500ml', on:42, par:60, vendor:'BeverageHub', status:'OK'},
     {name:'Lime Juice (1L)', on:3, par:12, vendor:'BarMart', status:'Critical'},
+    {name:'Pool Cue Tips', on:8, par:20, vendor:'BilliardSupply', status:'Low'},
   ],
   tasks:{
-    backlog:['Add “Mini-Martinis” to menu','Draft safety signage for iGolf'],
-    doing:['Tweak table timer UI','Sync n8n → Supabase logs'],
-    done:['Migrate to Eero router','Install Shelly Buttons']
+    backlog:['Add billiards pricing','Update karaoke song list'],
+    doing:['Configure floor plan editor','Integrate Spotify API'],
+    done:['Install security cameras','Set up POS system']
   },
-  customers:[
-    {name:'Jin Park', contact:'jin@example.com', notes:'Prefers Rm A, weekends', last:'Aug 10'},
-    {name:'Sam Lee', contact:'(917) 555-0142', notes:'VIP • ping pong league', last:'Aug 18'},
-    {name:'Ana Gomez', contact:'ana@mail.com', notes:'Student discount', last:'Aug 20'}
+  appTips:[
+    'Tip: Use voice commands for hands-free control',
+    'Tip: Drag and drop to customize floor layout',
+    'Tip: Set up automations for recurring tasks',
+    'Tip: Track revenue trends in the analytics dashboard',
+    'Tip: Press Ctrl/⌘ + K for quick actions'
   ]
 };
+
 /* ---------- Utilities ---------- */
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
+
 function toast(msg, kind='info'){
   const t = document.createElement('div');
   t.className = 'toast';
@@ -503,44 +988,89 @@ function toast(msg, kind='info'){
   setTimeout(()=>{ t.style.opacity=.0; t.style.transform='translateY(8px)'; }, 2600);
   setTimeout(()=> t.remove(), 3200);
 }
+
 function setRoute(route){
   $$('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.route===route));
   $$('.view').forEach(v=>v.classList.toggle('active', v.id === 'view-'+route));
   toast('Navigated to '+route, 'info');
 }
-function statusPill(status){
-  if(status==='ok') return '<span class="status s-ok">Available</span>';
-  if(status==='busy') return '<span class="status s-busy">In Use</span>';
-  return '<span class="status s-off">Offline</span>';
-}
+
 /* ---------- Renderers ---------- */
 function renderSchedule(){
-  const tb = $('#scheduleBody'); tb.innerHTML='';
+  const tb = $('#scheduleBody'); 
+  tb.innerHTML='';
   state.schedule.forEach(r=>{
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.time}</td><td>${r.area}</td><td>${r.booking}</td><td>${r.guests}</td>
-      <td><button class="btn" data-open="edit-booking" data-name="${r.booking}">✏️ Edit</button></td>`;
+    tr.innerHTML = `
+      <td>${r.time} (${r.duration})</td>
+      <td>${r.name}</td>
+      <td>${r.guests}</td>
+      <td>${r.salesType}</td>
+      <td>${r.details}</td>
+      <td>
+        <div class="action-btns">
+          <button class="icon-btn" title="Edit">✏️</button>
+          <button class="icon-btn" title="SMS">📱</button>
+          <button class="icon-btn" title="Email">📧</button>
+          <button class="icon-btn" title="Memo">📝</button>
+        </div>
+      </td>`;
     tb.appendChild(tr);
   });
 }
+
 function renderFloor(){
-  const grid = $('#floorGrid'); grid.innerHTML='';
-  state.floor.forEach(f=>{
-    const el = document.createElement('div');
-    el.className = 'tile';
-    el.innerHTML = `<div class="row" style="justify-content:space-between">
-        <strong>${f.label}</strong>${statusPill(f.status)}
-      </div>
-      <div class="row">
-        <button class="btn" data-open="start-table" data-table="${f.id}">▶️ Start</button>
-        <button class="btn" data-open="assign-guest" data-table="${f.id}">👤 Assign</button>
-        <button class="btn" data-workflow="stop-timer" data-table="${f.id}">⏹️ Stop</button>
-      </div>`;
-    grid.appendChild(el);
+  const grid = $('#floorGrid'); 
+  grid.innerHTML='';
+  
+  state.floorTables.forEach(table=>{
+    const card = document.createElement('div');
+    card.className = `table-card ${table.shape}`;
+    card.style.gridColumn = `${table.x + 1} / span ${table.shape === 'rectangle' ? 2 : 1}`;
+    card.style.gridRow = `${table.y + 1}`;
+    
+    card.innerHTML = `
+      <div class="table-status-indicator ${table.status}"></div>
+      <div class="table-name">${table.name}</div>
+      <div class="table-timer">${table.status === 'occupied' ? '45:23' : 'Available'}</div>
+    `;
+    
+    card.onclick = ()=> openTableDialog(table);
+    grid.appendChild(card);
   });
 }
+
+function openTableDialog(table){
+  modal.open(`Table ${table.name}`, `
+    <div class="tabs">
+      <button class="tab active">Manage</button>
+      <button class="tab">Group/Move</button>
+      <button class="tab">Note</button>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select>
+        <option ${table.status === 'available' ? 'selected' : ''}>Available</option>
+        <option ${table.status === 'occupied' ? 'selected' : ''}>Occupied</option>
+        <option ${table.status === 'reserved' ? 'selected' : ''}>Reserved</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Timer</label>
+      <input type="number" value="90" /> minutes
+    </div>
+    <div class="field">
+      <label>Server Assignment</label>
+      <input placeholder="Assign server..." />
+    </div>
+  `, ()=>{
+    toast(`Table ${table.name} updated`, 'ok');
+  });
+}
+
 function renderWorkflows(){
-  const list = $('#wfList'); list.innerHTML='';
+  const list = $('#wfList'); 
+  list.innerHTML='';
   state.workflows.forEach(w=>{
     const it = document.createElement('div');
     it.className='item';
@@ -555,24 +1085,34 @@ function renderWorkflows(){
     list.appendChild(it);
   });
 }
+
 function renderInventory(){
-  const tb = $('#invBody'); tb.innerHTML='';
+  const tb = $('#invBody'); 
+  tb.innerHTML='';
   state.inventory.forEach(i=>{
     const status = i.status==='OK' ? '<span class="status s-ok">OK</span>' :
       (i.status==='Low' ? '<span class="status s-busy">Low</span>' : '<span class="status s-off">Critical</span>');
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i.name}</td><td>${i.on}</td><td>${i.par}</td><td>${i.vendor}</td><td>${status}</td>
+    tr.innerHTML = `
+      <td>${i.name}</td>
+      <td>${i.on}</td>
+      <td>${i.par}</td>
+      <td>${i.vendor}</td>
+      <td>${status}</td>
       <td><button class="btn" data-workflow="reorder" data-item="${i.name}">🛒 Reorder</button></td>`;
     tb.appendChild(tr);
   });
 }
+
 function renderTasks(){
   ['backlog','doing','done'].forEach(col=>{
-    const root = $('#col-'+col); root.innerHTML='';
+    const root = $('#col-'+col); 
+    root.innerHTML='';
     state.tasks[col].forEach((t,idx)=>{
       const it=document.createElement('div');
       it.className='item';
-      it.innerHTML = `<div>${t}</div>
+      it.innerHTML = `
+        <div>${t}</div>
         <div class="row">
           ${col!=='backlog'?`<button class="btn" data-move="${col}:prev:${idx}">⬅️</button>`:''}
           ${col!=='done'?`<button class="btn" data-move="${col}:next:${idx}">➡️</button>`:''}
@@ -581,30 +1121,42 @@ function renderTasks(){
     });
   });
 }
-function renderCustomers(){
-  const tb=$('#custBody'); tb.innerHTML='';
-  state.customers.forEach(c=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML = `<td>${c.name}</td><td>${c.contact}</td><td>${c.notes}</td><td>${c.last}</td>
-    <td><button class="btn" data-open="book-customer" data-name="${c.name}">📅 Book</button></td>`;
-    tb.appendChild(tr);
-  });
-}
+
 function renderActivity(){
-  const el = $('#activity'); el.innerHTML='';
+  const el = $('#activity'); 
+  el.innerHTML='';
   const events = [
-    'Table 2 extended by 30m',
-    'Workflow “Set Lights Scene” executed',
-    'Inventory: Lime Juice marked Critical',
-    'New customer added: Ana Gomez'
+    'Table P2 session started',
+    'Spotify playlist changed to "Evening Vibes"',
+    'New reservation: Kim Davis @ 7PM',
+    'Low inventory alert: Pool Cue Tips'
   ];
   events.forEach(e=>{
     const node=document.createElement('div');
     node.className='item';
-    node.innerHTML=`<div>${e}</div><button class="btn" data-workflow="undo">↩️ Undo</button>`;
+    node.innerHTML=`<div>${e}</div><button class="btn" data-workflow="view-details">👁️</button>`;
     el.appendChild(node);
   });
 }
+
+function renderScheduleCalendar(){
+  const cal = $('#scheduleCalendar');
+  if(!cal) return;
+  
+  cal.innerHTML = '';
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  days.forEach(day => {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'calendar-day';
+    dayEl.innerHTML = `
+      <div class="calendar-day-header">${day}</div>
+      ${day === 'Wed' ? '<div class="calendar-event">6PM - Lee Park</div>' : ''}
+      ${day === 'Fri' ? '<div class="calendar-event">7PM - Team Event</div>' : ''}
+    `;
+    cal.appendChild(dayEl);
+  });
+}
+
 /* ---------- Modal ---------- */
 const modal = {
   open(title, bodyHTML, onOk){
@@ -621,6 +1173,7 @@ const modal = {
   },
   _ok:null
 };
+
 /* ---------- Command Palette ---------- */
 const palette = {
   open(){
@@ -629,18 +1182,22 @@ const palette = {
     palette.render('');
     $('#palInput').focus();
   },
-  close(){ $('#palette').classList.remove('show'); },
+  close(){ 
+    $('#palette').classList.remove('show'); 
+  },
   render(q){
     const all = [
       {t:'Start new session', a:'open:new-session'},
-      {t:'Open Waitlist', a:'open:waitlist'},
-      {t:'Run: Set Lights Scene', a:'wf:lights-scene'},
-      {t:'Run: Play Vibe', a:'wf:music-vibe'},
+      {t:'Create booking', a:'open:new-booking'},
+      {t:'Edit floor plan', a:'open:edit-floor-plan'},
+      {t:'Run: Spotify playlist', a:'wf:spotify-playlist'},
       {t:'Navigate: Floor', a:'nav:floor'},
-      {t:'Navigate: Automations', a:'nav:automations'},
+      {t:'Navigate: Schedule', a:'nav:schedule'},
+      {t:'Navigate: Settings', a:'nav:settings'},
       {t:'Sync Supabase', a:'act:sync'},
     ];
-    const list = $('#palList'); list.innerHTML='';
+    const list = $('#palList'); 
+    list.innerHTML='';
     all.filter(x=>x.t.toLowerCase().includes(q.toLowerCase()))
       .forEach(x=>{
         const b=document.createElement('button');
@@ -650,140 +1207,234 @@ const palette = {
       });
   }
 };
+
 /* ---------- Events ---------- */
+// Toggle sidebar
+$('#toggleSidebar').onclick = ()=>{
+  $('#sidebar').classList.toggle('collapsed');
+};
+
+// Space logo returns to dashboard
+$('#spaceLogo').onclick = ()=> setRoute('dashboard');
+$('#spaceLogo2').onclick = ()=> setRoute('dashboard');
+
+// Start/End Day toggle
+$('#startEndDay').onclick = ()=>{
+  state.dayStarted = !state.dayStarted;
+  $('#startEndDay').innerHTML = state.dayStarted ? '🌙 End Day' : '🌅 Start Day';
+  toast(state.dayStarted ? 'Day started - all systems active' : 'Day ended - generating reports', 'ok');
+};
+
 // Navigation
 $$('.nav button').forEach(b=>b.addEventListener('click', ()=> setRoute(b.dataset.route)));
+
 // Tabs (zones)
 $$('[data-tabs="zones"] .tab').forEach(t=>t.addEventListener('click', ()=>{
-  $$('.tab').forEach(x=>x.classList.remove('active'));
-  t.classList.add('active'); state.zone=t.dataset.zone;
-  toast('Zone set to '+state.zone, 'ok');
+  $$('[data-tabs="zones"] .tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active'); 
+  state.zone=t.dataset.zone;
+  toast('Activity set to '+state.zone, 'ok');
 }));
-// Buttons with data-workflow
+
+// Location buttons
+$$('.location-btn').forEach(btn=>btn.addEventListener('click', ()=>{
+  $$('.location-btn').forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active');
+  toast('Filtering by location', 'info');
+}));
+
+// Settings toggles
+$$('.toggle-switch').forEach(toggle=>toggle.addEventListener('click', ()=>{
+  toggle.classList.toggle('active');
+  const setting = toggle.dataset.setting;
+  toast(`${setting} ${toggle.classList.contains('active') ? 'enabled' : 'disabled'}`, 'ok');
+}));
+
+// Button clicks
 document.body.addEventListener('click', (e)=>{
   const b = e.target.closest('button');
   if(!b) return;
 
   if(b.dataset.workflow){
     const wf = b.dataset.workflow;
-    const detail = {workflow:wf, table:b.dataset.table, item:b.dataset.item};
     toast('Triggered workflow: '+wf, 'ok');
-    // Hook this to n8n: POST detail
-    console.log('n8n.emit', detail);
+    console.log('Workflow:', wf);
+  }
+
+  if(b.dataset.action){
+    const action = b.dataset.action;
+    if(action === 'sync-supabase'){
+      toast('Syncing with Supabase...', 'info');
+      setTimeout(()=> toast('Sync complete', 'ok'), 1500);
+    }
   }
 
   if(b.dataset.open==='new-session'){
     modal.open('Start Session — '+state.zone, `
-      <div class="field"><label>Guests</label><input id="gs" type="number" min="1" value="2"></div>
-      <div class="field"><label>Length</label>
-        <select id="len"><option>60 min</option><option selected>90 min</option><option>120 min</option></select>
+      <div class="field">
+        <label>Activity Type</label>
+        <select>
+          <option>Ping Pong</option>
+          <option>iGolf</option>
+          <option>Karaoke</option>
+          <option>Billiards</option>
+        </select>
       </div>
-      <div class="field"><label>Notes</label><textarea id="notes" rows="3"></textarea></div>
-    `, ()=>{
-      const payload = {guests:$('#gs').value, length:$('#len').value, notes:$('#notes').value, zone:state.zone};
-      toast('Session created ('+payload.length+', '+payload.guests+' guests)', 'ok');
-      console.log('n8n.emit', {workflow:'create-session', payload});
-    });
-  }
-
-  if(b.dataset.open==='waitlist'){
-    modal.open('Waitlist', `
-      <div class="field"><label>Name</label><input id="wl-name" placeholder="Customer name"></div>
-      <div class="field"><label>Guests</label><input id="wl-guests" type="number" value="2"></div>
-    `, ()=>{
-      toast('Added to waitlist: '+$('#wl-name').value, 'ok');
-      console.log('supabase.insert', {table:'waitlist', name:$('#wl-name').value, guests:$('#wl-guests').value});
-    });
-  }
-
-  if(b.dataset.open==='map-settings'){
-    modal.open('Map Settings', `
-      <div class="field"><label>Columns</label><input id="cols" type="number" value="4"></div>
-      <div class="field"><label>Show Offline</label>
-        <select id="showOff"><option>Yes</option><option>No</option></select>
+      <div class="field">
+        <label>Number of Guests</label>
+        <input type="number" min="1" value="2">
+      </div>
+      <div class="field">
+        <label>Session Length</label>
+        <select>
+          <option>60 min</option>
+          <option selected>90 min</option>
+          <option>120 min</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Table Assignment</label>
+        <select>
+          <option>Auto-assign</option>
+          <option>P1</option>
+          <option>P2</option>
+          <option>P3</option>
+        </select>
       </div>
     `, ()=>{
-      toast('Map settings saved', 'ok');
+      toast('Session started', 'ok');
     });
   }
 
-  if(b.dataset.open==='start-table'){
-    const table=b.dataset.table;
-    modal.open('Start '+ 'Table '+table, `
-      <div class="field"><label>Guests</label><input id="tgs" type="number" value="2"></div>
-      <div class="field"><label>Length</label><select id="tlen"><option>60 min</option><option selected>90 min</option><option>120 min</option></select></div>
+  if(b.dataset.open==='schedule-form'){
+    modal.open('Schedule Reservation', `
+      <div class="field">
+        <label>Date</label>
+        <input type="date">
+      </div>
+      <div class="field">
+        <label>Time</label>
+        <input type="time">
+      </div>
+      <div class="field">
+        <label>Activity</label>
+        <select>
+          <option>Ping Pong</option>
+          <option>iGolf</option>
+          <option>Karaoke</option>
+          <option>Billiards</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Guest Name</label>
+        <input placeholder="Enter name...">
+      </div>
+      <div class="field">
+        <label>Number of Guests</label>
+        <input type="number" value="2">
+      </div>
     `, ()=>{
-      toast('Table '+table+' started', 'ok');
-      console.log('n8n.emit',{workflow:'start-table', table, guests:$('#tgs').value, length:$('#tlen').value});
+      toast('Reservation scheduled', 'ok');
     });
   }
 
-  if(b.dataset.open==='assign-guest'){
-    const table=b.dataset.table;
-    modal.open('Assign Guest to Table '+table, `
-      <div class="field"><label>Customer</label><input id="cust" placeholder="Type name…"></div>
-      <div class="field"><label>Notes</label><input id="cnotes" placeholder="Optional"></div>
+  if(b.dataset.open==='order-form'){
+    modal.open('Order Form', `
+      <div class="field">
+        <label>Table</label>
+        <select>
+          <option>P1</option>
+          <option>P2</option>
+          <option>D1</option>
+          <option>B1</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Items</label>
+        <textarea rows="4" placeholder="Enter order items..."></textarea>
+      </div>
+      <div class="field">
+        <label>Special Instructions</label>
+        <input placeholder="Any special requests...">
+      </div>
     `, ()=>{
-      toast('Assigned '+($('#cust').value||'Unknown')+' → Table '+table, 'ok');
-      console.log('supabase.update',{table:'sessions', action:'assign', value:$('#cust').value, tableId:table});
+      toast('Order submitted', 'ok');
     });
   }
 
-  if(b.dataset.open==='wf-details'){
-    const id=b.dataset.id;
-    openDrawer(); $('#agentPreview').innerHTML=`
-      <div class="item"><div><strong>Workflow</strong><div class="muted">${id}</div></div>
-        <button class="btn" data-workflow="${id}">Run</button></div>
-      <div class="item"><div>Last run</div><div class="muted">2m ago • 200ms</div></div>
-      <div class="item"><div>Status</div><div class="muted">OK</div></div>`;
-  }
-
-  if(b.dataset.open==='new-workflow'){
-    modal.open('Create Workflow', `
-      <div class="field"><label>Name</label><input id="wf-name" placeholder="e.g., Close Nightly"></div>
-      <div class="field"><label>Trigger</label><select id="wf-trg"><option>Manual</option><option>Schedule</option><option>Webhook</option></select></div>
+  if(b.dataset.open==='edit-floor-plan'){
+    modal.open('Edit Floor Plan', `
+      <div class="field">
+        <label>Grid Configuration</label>
+        <div class="row">
+          <input type="number" value="14" style="width:80px"> Columns
+          <input type="number" value="6" style="width:80px"> Rows
+        </div>
+      </div>
+      <div class="field">
+        <label>Add Table</label>
+        <div class="row">
+          <select>
+            <option>Square (1x1)</option>
+            <option>Rectangle (2x1)</option>
+            <option>Circle (1x1)</option>
+          </select>
+          <input placeholder="Table name (e.g., P5)">
+        </div>
+      </div>
+      <div class="field">
+        <label>Table Components</label>
+        <div style="display:grid; gap:8px">
+          <label><input type="checkbox" checked> Timer</label>
+          <label><input type="checkbox" checked> Server assignment</label>
+          <label><input type="checkbox" checked> Guest counter</label>
+          <label><input type="checkbox"> Activity log</label>
+        </div>
+      </div>
     `, ()=>{
-      const name=$('#wf-name').value||'Untitled';
-      state.workflows.push({id:name.toLowerCase().replace(/\s+/g,'-'), name, desc:'Custom', status:'ready'});
-      renderWorkflows(); toast('Workflow created', 'ok');
+      toast('Floor plan updated', 'ok');
+      renderFloor();
     });
   }
 
-  if(b.dataset.open==='edit-booking'){
-    const nm=b.dataset.name;
-    modal.open('Edit Booking', `
-      <div class="field"><label>Booking</label><input id="bk" value="${nm}"></div>
-      <div class="field"><label>Guests</label><input id="bkg" type="number" value="2"></div>
-    `, ()=>{ toast('Booking updated', 'ok'); });
-  }
-
-  if(b.dataset.open==='add-customer'){
-    modal.open('Add Customer', `
-      <div class="field"><label>Name</label><input id="cn" /></div>
-      <div class="field"><label>Contact</label><input id="cc" /></div>
-      <div class="field"><label>Notes</label><input id="ct" /></div>
+  if(b.dataset.open==='new-booking'){
+    modal.open('New Booking', `
+      <div class="field">
+        <label>Date & Time</label>
+        <div class="row">
+          <input type="date">
+          <input type="time">
+        </div>
+      </div>
+      <div class="field">
+        <label>Customer Name</label>
+        <input placeholder="Enter name...">
+      </div>
+      <div class="field">
+        <label>Activity</label>
+        <select>
+          <option>Ping Pong</option>
+          <option>iGolf</option>
+          <option>Karaoke</option>
+          <option>Billiards</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Duration</label>
+        <select>
+          <option>60 min</option>
+          <option>90 min</option>
+          <option>120 min</option>
+        </select>
+      </div>
     `, ()=>{
-      state.customers.push({name:$('#cn').value, contact:$('#cc').value, notes:$('#ct').value, last:'Today'});
-      renderCustomers(); toast('Customer added', 'ok');
+      toast('Booking created', 'ok');
     });
   }
-
-  if(b.dataset.open==='book-customer'){
-    const name=b.dataset.name;
-    modal.open('Book — '+name, `
-      <div class="field"><label>Date</label><input type="date" id="bd"></div>
-      <div class="field"><label>Time</label><input type="time" id="bt"></div>
-    `, ()=>{
-      toast('Booked '+name, 'ok');
-      console.log('n8n.emit',{workflow:'book-customer', name, date:$('#bd').value, time:$('#bt').value});
-    });
-  }
-
-  if(b.dataset.action==='recalc-par'){ toast('Recalculating PAR levels…', 'info'); }
-  if(b.dataset.action==='sync-supabase'){ toast('Syncing with Supabase…', 'ok'); console.log('supabase.sync'); }
 
   if(b.dataset.move){
-    const [col, dir, idxStr] = b.dataset.move.split(':'); const idx=+idxStr;
+    const [col, dir, idxStr] = b.dataset.move.split(':'); 
+    const idx=+idxStr;
     const item = state.tasks[col][idx];
     state.tasks[col].splice(idx,1);
     if(dir==='next'){
@@ -796,57 +1447,126 @@ document.body.addEventListener('click', (e)=>{
     renderTasks();
   }
 
-  if(b.id==='themeBtn'){ document.body.classList.toggle('light'); toast('Theme toggled'); }
+  if(b.id==='themeBtn'){ 
+    document.body.classList.toggle('light'); 
+    toast('Theme toggled', 'info'); 
+  }
 });
+
 // Modal controls
 $('#closeModal').onclick = ()=> modal.close();
 $('#modalCancel').onclick = ()=> modal.close();
-$('#modalOk').onclick = ()=>{ if(modal._ok) modal._ok(); modal.close(); };
-// Drawer
-function openDrawer(){ $('#drawer').classList.add('open'); }
-function closeDrawer(){ $('#drawer').classList.remove('open'); }
+$('#modalOk').onclick = ()=>{ 
+  if(modal._ok) modal._ok(); 
+  modal.close(); 
+};
+
+// AI Drawer
+function openDrawer(){ 
+  $('#drawer').classList.add('open'); 
+}
+function closeDrawer(){ 
+  $('#drawer').classList.remove('open'); 
+}
 $('#closeDrawer').onclick = closeDrawer;
-$('[data-open-drawer]').onclick = openDrawer;
+$$('[data-open-drawer]').forEach(el => el.onclick = openDrawer);
+
+// AI Chat
+$('#sendAI').onclick = ()=>{
+  const input = $('#aiInput').value;
+  if(!input) return;
+  
+  const chat = $('#aiChat');
+  const userMsg = document.createElement('div');
+  userMsg.className = 'ai-message user';
+  userMsg.textContent = input;
+  chat.appendChild(userMsg);
+  
+  $('#aiInput').value = '';
+  
+  setTimeout(()=>{
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'ai-message assistant';
+    aiMsg.textContent = 'Processing your request...';
+    chat.appendChild(aiMsg);
+    chat.scrollTop = chat.scrollHeight;
+  }, 500);
+};
+
+$$('.ai-prompt-chip').forEach(chip => {
+  chip.onclick = ()=>{
+    $('#aiInput').value = chip.textContent;
+    $('#sendAI').click();
+  };
+});
+
+// Search buttons
+$$('.search-btn').forEach(btn => {
+  btn.onclick = ()=>{
+    const action = btn.title;
+    toast(`${action} activated`, 'info');
+  };
+});
+
 // Palette
-$('[data-open-palette]').onclick = ()=> palette.open();
+$$('[data-open-palette]').forEach(el => el.onclick = ()=> palette.open());
 $('#palInput').addEventListener('input', e=> palette.render(e.target.value));
 $('#palList').addEventListener('click', e=>{
-  const b=e.target.closest('button'); if(!b) return;
+  const b=e.target.closest('button'); 
+  if(!b) return;
   const a=b.dataset.action;
-  if(a.startsWith('open:')){ const key=a.split(':')[1]; document.querySelectorAll(`[data-open="${key}"]`)[0]?.click(); }
-  if(a.startsWith('wf:')){ const id=a.split(':')[1]; toast('Triggered workflow: '+id, 'ok'); }
-  if(a.startsWith('nav:')){ const r=a.split(':')[1]; setRoute(r); }
-  if(a==='act:sync'){ toast('Syncing with Supabase…','ok'); }
+  if(a.startsWith('open:')){ 
+    const key=a.split(':')[1]; 
+    document.querySelector(`[data-open="${key}"]`)?.click(); 
+  }
+  if(a.startsWith('wf:')){ 
+    const id=a.split(':')[1]; 
+    toast('Triggered workflow: '+id, 'ok'); 
+  }
+  if(a.startsWith('nav:')){ 
+    const r=a.split(':')[1]; 
+    setRoute(r); 
+  }
+  if(a==='act:sync'){ 
+    toast('Syncing with Supabase…','ok'); 
+  }
   palette.close();
 });
+
+// Keyboard shortcuts
 document.addEventListener('keydown', (e)=>{
-  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); palette.open(); }
-  if(e.key==='Escape'){ palette.close(); modal.close(); closeDrawer(); }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ 
+    e.preventDefault(); 
+    palette.open(); 
+  }
+  if(e.key==='Escape'){ 
+    palette.close(); 
+    modal.close(); 
+    closeDrawer(); 
+  }
 });
-// Agent preview
-$('#agentInput').addEventListener('input', e=>{
-  const q=e.target.value.trim();
-  $('#agentPreview').innerHTML = q ? `
-    <div class="item"><div>Intent</div><div class="muted">control.devices.scene</div></div>
-    <div class="item"><div>Entities</div><div class="muted">{"zone":"${state.zone}","lights":"dim","playlist":"chill"}</div></div>
-    <div class="item"><div>Plan</div><div class="muted">Set lights → Play music → Update floor</div></div>
-  ` : '';
-});
+
+// Rotating tips
+let tipIndex = 0;
+setInterval(()=>{
+  $('#appTips').textContent = state.appTips[tipIndex];
+  tipIndex = (tipIndex + 1) % state.appTips.length;
+}, 5000);
+
 /* ---------- Initial render ---------- */
-renderSchedule(); renderFloor(); renderWorkflows(); renderInventory(); renderTasks(); renderCustomers(); renderActivity();
-/* ---------- Demo: bump active KPI ---------- */
-setInterval(()=>{ const n=+$('#kpi-active').textContent; $('#kpi-active').textContent = (n%12)+1; }, 6000);
-/* ---------- Light theme (optional) ---------- */
-const lightCSS = document.createElement('style');
-lightCSS.textContent = `
-  body.light{ --bg:#f6f9ff; --bg-2:#eef3ff; --surface:#ffffff; --elev:#f7fbff; --text:#0b1220; --muted:#516178; }
-  body.light .sidebar, body.light .card, body.light .tile, body.light .item, body.light .modal, body.light .drawer { background: #ffffff; }
-  body.light .sidebar{ background:#f5f9ff; }
-  body.light .nav button:hover{ background:#eaf2ff }
-  body.light .nav button.active{ background:linear-gradient(90deg, rgba(0,229,255,.12), rgba(138,43,226,.08)); }
-  body.light .search{ background:#eef3ff; }
-`;
-document.head.appendChild(lightCSS);
+renderSchedule(); 
+renderFloor(); 
+renderWorkflows(); 
+renderInventory(); 
+renderTasks(); 
+renderActivity();
+renderScheduleCalendar();
+
+/* ---------- Demo: update active tables ---------- */
+setInterval(()=>{ 
+  const n=+$('#kpi-active').textContent; 
+  $('#kpi-active').textContent = Math.floor(Math.random() * 12) + 1; 
+}, 8000);
 </script>
 </body>
 </html>
